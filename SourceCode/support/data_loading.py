@@ -26,11 +26,15 @@ Scalar / 1-D variables (all trailing dims == 'NA'):
 """
 
 # Standard library imports
+import csv
 import os
 
 # Third party imports
 import numpy as np
 import polars as pl
+
+# Local imports
+from SourceCode.support.check_input_files import check_var_dims, check_vars_exist
 
 
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
@@ -71,8 +75,15 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
     titles['TIME'] = timeline
 
     models_enabled = [m.strip() for m in ftt_modules.split(',') if m.strip()]
-    # TODO: avoid hardcoding models here
-    supported_models = {'FTT-Tr', 'FTT-P', 'FTT-H', 'FTT-Fr'}
+    supported_models = get_valid_ftt_models()
+    # if any models enabled are not supported, show warning
+    if any(m not in supported_models for m in models_enabled):
+        unsupported = [m for m in models_enabled if m not in supported_models]
+        raise ValueError(
+            f"Unsupported FTT module(s) specified: {', '.join(unsupported)}. "
+            f"Supported modules are: {', '.join(supported_models)}."
+        )
+    
     models_to_load = [m for m in models_enabled if m in supported_models]
     models_to_load.append('General')  # Always load General
     
@@ -106,7 +117,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
         for filename in os.listdir(directory):
             if not filename.endswith('.csv'):
                 continue
-
             var = filename[:-4]  # strip '.csv'
             if var not in dimensions or var not in data[scen]:
                 continue
@@ -125,6 +135,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
                 )
                 continue
 
+            if scen == 'S0':
+                check_var_dims(var, df, titles, dimensions)
+
             _fill_from_input_df(
                 df, var, dimensions, titles, timeline, tl_idx, forstart,
                 data[scen][var],
@@ -134,6 +147,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
         return loaded_vars
 
     for module in models_to_load:
+        check_vars_exist(module)
         s0_directory = os.path.join('Inputs', 'S0', module)
         module_vars = _read_and_fill_module_folder('S0', module, s0_directory)
 
@@ -380,3 +394,25 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
                 coords = base_coords.copy()
                 coords[wide_axis] = w_idx
                 target[tuple(coords)] = row_vals[col_j]
+
+def get_valid_ftt_models():
+    """Return a list of valid FTT module names by checking the Models short 
+    name row in classification_titles.csv
+    Returns
+    -------
+    list of str
+        A list of valid FTT module names.
+    """
+    class_titles_path = os.path.join('Utilities/titles', 'classification_titles.csv')
+    if not os.path.isfile(class_titles_path):
+        raise FileNotFoundError(f"Classification titles file not found: {class_titles_path}")
+
+    with open(class_titles_path, 'r', encoding='utf-8-sig', newline='') as csv_file:
+        reader = csv.reader(csv_file)
+        for row in reader:
+            if row[0].strip() == 'Models' and row[4].strip() == 'Short name':
+                return [value.strip() for value in row[5:] if value and value.strip()]
+
+    raise ValueError(
+        "Could not find models short name row in classification_titles.csv"
+    )
