@@ -79,7 +79,7 @@ FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,
 MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,Y
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,Y
-PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,General,-,-,2010,Y
+PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,General,-,-,2010,
 RERY,Primary energy supply before trade,PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,Y
 DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,
@@ -376,3 +376,4 @@ Battery cap additions,Capacity additions per timestep per model,GWh,models_w_bat
 Cumulative total batcap,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,
 ZEVC,Starting non-battery costs of a truck,USD/veh,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,
 Battery price,Battery prices for transport and freight,USD/kWh,RTI,NA,NA,TIME,General,2018,2023,2018,
+gm_curtailment,FTT-GMP curtailed electricity,GWh/yr,RTI,NA,NA,TIME,FTT-GMP,,,2001,Y
