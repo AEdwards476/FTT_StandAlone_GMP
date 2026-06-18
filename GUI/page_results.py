@@ -120,7 +120,8 @@ def render_results_page():
                                         'FTT-P': 'blue',
                                         'FTT-H': 'orange',
                                         'FTT-Tr': 'green',
-                                        'FTT-Fr': 'purple'
+                                        'FTT-Fr': 'purple',
+                                        'FTT-GMP': 'teal',
                                     }
 
                                     with models_container:

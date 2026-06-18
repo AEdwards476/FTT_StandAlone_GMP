@@ -119,7 +119,8 @@ class ResultsEngine:
             'FTT-H': 'HEWS',   # Heat
             'FTT-P': 'MEWS',   # Power
             'FTT-Tr': 'TEWS',  # Transport
-            'FTT-Fr': 'ZEWS'   # Freight
+            'FTT-Fr': 'ZEWS',   # Freight
+            'FTT_GMP': 'gm_curtailment' # Green molecule
         }
         
         results = {}
