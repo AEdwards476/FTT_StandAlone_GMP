@@ -1,0 +1,6 @@
+﻿GMTI,1 Investment ,2 std ,3 O&M,4 std ,5 Lifetime ,6 Lead time,7 Efficiency ,8 Capacity factor,9 Baseline capacity,10 Eff learning,11 Inv learning,12 OPEX learning,13 Discount rate,14 T & S costs
+1 DAC,5961,1788,356,106,20,2,4.01,0.9,4000,-0.05,-0.12,-0.075,0.05,
+2 DOC,5630,1689,8,1,15,2,7.2,0.9,4000,-0.05,-0.12,0,0.05,
+3 H2 plant,2537,761,48,14,20,3,50,0.9,100,-0.02,-0.18,-0.18,0.05,
+4 H2 Stacks,430,129,0,0,10,0,0,0,0,0,0,0,0.05,0
+5 Methanation,,,,,,,,0.9,,,,,0.05,
