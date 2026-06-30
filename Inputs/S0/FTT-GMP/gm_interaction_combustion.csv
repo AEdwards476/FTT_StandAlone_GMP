@@ -1,0 +1,6 @@
+﻿,1 Conventional,2 CCS retrofit,3 H2 ready,4 H2 retrofit
+1 Fossil gas + CCS + DAC,0,1,0,0
+2 Fossil gas + CCS + DOC,0,1,0,0
+3 Synthetic methane + CCS + DAC,0,1,0,0
+4 Synthetic methane + CCS + DOC,0,1,0,0
+5 Hydrogen,0,0,0,1

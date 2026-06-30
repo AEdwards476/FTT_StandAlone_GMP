@@ -1,0 +1,5 @@
+﻿,Capex (GBP/t),Capex SD,Fuel cost GBP/t),Fuel cost SD,Opex (GBP/t),Opex SD,Lifetime,Lead time,Capacity factor,Efficiency (MWh/t),Capex learning exp,Opex learning exp,Efficiency learning exp,Discount rate,Energy content (MWh/t)
+1 Fossil gas,0,0,0.037,0.00925,0,0,0,0,0,0,0,0,0,0,15
+2 Synthetic methane,196,49,0,0,19.6,4.9,15,3,0.9,15,-0.02,-0.18,-0.18,0.15,15
+3 Hydrogen BOP,150,37.5,0,0,15,3.75,20,3,0.9,55,-0.02,-0.18,-0.18,0.15,39
+4 Hydrogen stack,20,5,0,0,2,0.5,10,0,0.9,0,-0.02,-0.18,-0.18,0.15,0

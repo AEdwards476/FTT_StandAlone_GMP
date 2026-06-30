@@ -1,0 +1,5 @@
+﻿,Capex (GBP/kW),Capex SD,Opex GBP/KW),Opex SD,Lifetime,Lead time,Capacity factor,Efficiency (%),Capex learning exp,Opex learning exp,Efficiency learning exp,Discount rate
+1 Conventional,945,283.5,22.9,6.87,25,3,0.3,0.623,-0.058893689,0,0,0.05
+2 CCS retrofit,793,237.9,35.5,10.65,25,3,0.3,0.543,-0.058893689,0,0,0.05
+3 H2 ready,976,292.8,22.9,6.87,25,3,0.3,0.623,-0.058893689,0,0,0.05
+4 H2 retrofit,50,15,25.1,7.53,25,3,0.3,0.623,-0.058893689,0,0,0.05

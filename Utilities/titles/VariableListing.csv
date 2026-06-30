@@ -378,3 +378,10 @@ ZEVC,Starting non-battery costs of a truck,USD/veh,RTI,FTTI,NA,TIME,FTT-Fr,,,200
 Battery price,Battery prices for transport and freight,USD/kWh,RTI,NA,NA,TIME,General,2018,2023,2018,
 Smart meter uptake,Fraction of households with smart meters,,RTI,NA,NA,TIME,General,2018,2022,2018,
 TOU tariff uptake,Fraction of households with EVs or HPs that have TOU tariffs,,RTI,NA,NA,TIME,General,2018,2023,2018,
+gm_curtailment,Annual volume of curtailed electricity,GWh,RTI,NA,NA,TIME,FTT-GMP,,,2001,Y
+gm_costs_molecules,Cost matrix of molecule production,various,NA,titles_molecules,cost_titles_molecules,NA,FTT-GMP,,2025,2001,Y
+gm_costs_combustion,Cost matrix of molecule combustion,various,NA,titles_combustion,cost_titles_combustion,NA,FTT-GMP,,2025,2001,Y
+gm_costs_removal,Cost matrix of CO2 removal,various,NA,titles_removal,cost_titles_removal,NA,FTT-GMP,,2025,2001,Y
+gm_interaction_molecules,,,NA,titles_gm_pathways,titles_molecules,NA,FTT-GMP,,,,Y
+gm_interaction_combustion,,,NA,titles_gm_pathways,titles_combustion,NA,FTT-GMP,,,,Y
+gm_interaction_removal,,,NA,titles_gm_pathways,titles_removal,NA,FTT-GMP,,,,Y
