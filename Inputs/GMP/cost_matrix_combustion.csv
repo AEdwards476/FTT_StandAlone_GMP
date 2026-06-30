@@ -1,5 +1,5 @@
-﻿,1 Investment,2 std,3 Fuel,4 std,5 O&M,6 std,7 Lifetime,8 Lead time,9 Capacity factor,10 Efficiency,11 Emissions,12 Learning exp,13 Discount rate
-1 CCGT,945,283.5,,,,,25,3,0.3,0.623,370,-0.058893689,0.05
-3 CCGT (CCS retrofit),793,237.9,,,,,25,3,0.3,0.543,5.55,,0.05
-3 CCGT (H2 ready),976,292.8,,,,,25,3,0.3,0.623,370,,0.05
-4 CCGT (H2 retrofit),50,15,,,,,25,,0.3,0.623,0,,0.05
+﻿GCTI,1 Investment,2 std,5 Fixed O&M,6 std,7 Lifetime,8 Lead time,9 Capacity factor,10 Efficiency,11 Emissions,12 Learning exp,13 Discount rate
+1 CCGT,945,283.5,22.9,6.87,25,3,0.3,0.623,370,-0.058893689,0.05
+2 CCGT (CCS retrofit),793,237.9,35.5,10.65,25,3,0.3,0.543,5.55,,0.05
+3 CCGT (H2 ready),976,292.8,22.9,6.87,25,3,0.3,0.623,370,,0.05
+4 CCGT (H2 retrofit),50,15,25.1,7.53,25,,0.3,0.623,0,,0.05
