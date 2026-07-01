@@ -385,3 +385,12 @@ gm_costs_removal,Cost matrix of CO2 removal,various,NA,titles_removal,cost_title
 gm_interaction_molecules,,,NA,titles_gm_pathways,titles_molecules,NA,FTT-GMP,,,,Y
 gm_interaction_combustion,,,NA,titles_gm_pathways,titles_combustion,NA,FTT-GMP,,,,Y
 gm_interaction_removal,,,NA,titles_gm_pathways,titles_removal,NA,FTT-GMP,,,,Y
+gm_shares,Pathway market shares,fraction,RTI,titles_gm_pathways,NA,TIME,FTT-GMP,-,2024,2001,
+gm_capacity,Installed capacity by pathway,GW,RTI,titles_gm_pathways,NA,TIME,FTT-GMP,-,-,2001,
+gm_pathway_lcoe,Levelised cost of electricity by pathway,GBP/MWh,RTI,titles_gm_pathways,NA,NA,FTT-GMP,-,-,,
+gm_pathway_lcoe_sd,LCOE standard deviation,GBP/MWh,RTI,titles_gm_pathways,NA,NA,FTT-GMP,-,-,,
+gm_lcoh,Levelised cost of hydrogen,GBP/KWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_lcoh_sd,Standard deviation of hydrogen cost,GBP/KWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_gbl_cap_molecules,Global cumulative molecule production capacity,GW,NA,titles_molecules,NA,TIME,FTT-GMP,-,-,2001,Y
+gm_gbl_cap_combustion,Global cumulative combustion capacity,GW,NA,titles_combustion,NA,TIME,FTT-GMP,-,-,2001,Y
+gm_gbl_cap_removal,Global cumulative CO2 removal capacity,GW,NA,titles_removal,NA,TIME,FTT-GMP,-,-,2001,Y
