@@ -51,6 +51,7 @@ def get_dac_lc(data, year, titles):
     
     # Electricity price in £/kWh -- hardcoded for now
     elec_price = 0.10
+    elec_price_sd = 0.02
     
     # 1. Production and Resource Inputs
     # Annual drawdown (tCO2/year)
@@ -62,9 +63,15 @@ def get_dac_lc(data, year, titles):
     raw_capex = (removal_costs[removal_titles['1 DAC'], 
                                    rem_cost_titles['Capex (GBP/tCO2)']] * 
                      annual_removal_tCO2)
+    raw_capex_sd = (removal_costs[removal_titles['1 DAC'], 
+                                   rem_cost_titles['Capex SD']] *
+                        annual_removal_tCO2)
     raw_opex = (removal_costs[removal_titles['1 DAC'], 
                                   rem_cost_titles['Opex (GBP/tCO2)']] * 
                     annual_removal_tCO2)
+    raw_opex_sd = (removal_costs[removal_titles['1 DAC'], 
+                                  rem_cost_titles['Opex SD']] *
+                       annual_removal_tCO2)
 
     lt_project = int(removal_costs[removal_titles['1 DAC'], 
                                    rem_cost_titles['Lifetime']])
@@ -73,35 +80,50 @@ def get_dac_lc(data, year, titles):
 
     # Absolute annual electricity cost (£)
     annual_elec_cost_gbp = annual_elec_input_kwh * elec_price
+    annual_elec_variance = (annual_elec_input_kwh * elec_price_sd) ** 2
 
     # 3. Cash Flow & Discounting Setup
     npv_costs = (
-        0.5 * raw_capex / (1 + dr) ** 0.5 + 
+        0.5 * raw_capex / (1 + dr) ** 0 + 
         0.5 * raw_capex / (1 + dr) ** 1
     ) # 2 year build time with costs split evenly between the 2 years (£)
     npv_generation = 0
+    npv_cost_variance = (
+        (0.5 * raw_capex_sd / (1 + dr) ** 0) ** 2 + 
+        (0.5 * raw_capex_sd / (1 + dr) ** 1) ** 2
+    ) 
     
     costs_no_dr = raw_capex
     generation_no_dr = 0
+    costs_no_dr_variance = raw_capex_sd ** 2
 
     # 4. Lifetime Loop
     for age in range(2, lt_project + 2):
         lifetime_year_costs = (raw_opex + 
                                annual_elec_cost_gbp)
+        year_variance = (raw_opex_sd ** 2) + annual_elec_variance
         
         discount_factor = (1 + dr) ** age
         
         npv_costs += lifetime_year_costs / discount_factor
         npv_generation += annual_removal_tCO2 / discount_factor
+        npv_cost_variance += year_variance / (discount_factor ** 2)
         
         costs_no_dr += lifetime_year_costs  
         generation_no_dr += annual_removal_tCO2  
+        costs_no_dr_variance += year_variance
 
     # 5. LCOH Calculation & Assignment
     lcodac = npv_costs / npv_generation
     lcodac_no_dr = costs_no_dr / generation_no_dr
+    total_costs_sd = np.sqrt(npv_cost_variance)
+    lcodac_sd = total_costs_sd / npv_generation
+    total_costs_no_dr_sd = np.sqrt(costs_no_dr_variance)
+    lcodac_no_dr_sd = total_costs_no_dr_sd / generation_no_dr
     
     data['gm_lcodac'][:, 0, 0] = lcodac
     data['gm_lcodac_no_dr'][:, 0, 0] = lcodac_no_dr
+    data['gm_lcodac_sd'][:, 0, 0] = lcodac_sd
+    data['gm_lcodac_no_dr_sd'][:, 0, 0] = lcodac_no_dr_sd
 
     return data
