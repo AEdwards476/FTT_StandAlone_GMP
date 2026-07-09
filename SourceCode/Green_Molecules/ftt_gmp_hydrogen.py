@@ -19,6 +19,7 @@ Functions included:
 def get_hydrogen_lc(data, year, titles):
     """
     Returns current year levelised costs of hydrogen production in £/kwh.
+    Modifies the input 'data' dictionary in-place.
 
     Parameters
     -----------
@@ -31,67 +32,74 @@ def get_hydrogen_lc(data, year, titles):
 
     Returns
     ----------
-    data: Global model data dictionary
-
+    data: Global model data dictionary, updated with new levelised costs of 
+        hydrogen production
     """
     # Categories for the molecule cost matrix
-    mol_cost_titles = {category: index for index, category
-                  in enumerate(titles['cost_titles_molecules'])}
-    molecule_titles = {category: index for index, category
-                  in enumerate(titles['titles_molecules'])}
+    mol_cost_titles = {category: index for index, category 
+                       in enumerate(titles['cost_titles_molecules'])}
+    molecule_titles = {category: index for index, category 
+                       in enumerate(titles['titles_molecules'])}
     
     molecule_costs = data['gm_costs_molecules'][0, :, :].copy()
     
-    # set conversion factor for t to kwh
-    conversion_factor = 1/33330
+    # Constants
+    KWH_PER_TONNE_H2 = 33330  # LHV of Hydrogen (~33.33 kWh/kg)
 
     # PLACEHOLDER VALUES FOR NOW
-    # To be replaced once we understand what we are doing with electricity prices
-    capacity_kw = 6500       # Your debug message implies a ~6.5 MW system
+    capacity_kw = 6500 
     capacity_factor = 0.90   # 90% utilization
-    efficiency = 0.65        # 65% LHV efficiency
-    elec_price = 0.05
+    mwh_per_t = molecule_costs[molecule_titles['3 Hydrogen BOP'],
+                               mol_cost_titles['Efficiency (MWh/t)']]
+    # Electricity price in £/kWh -- hardcoded for now
+    elec_price = 0.10
     
-    # Extract raw costs from the matrix, which are £/t
-    annual_capacity_tonnes = (capacity_kw * capacity_factor *
-                              8760 * efficiency) / 33.33 / 1000
+    # 1. Production and Resource Inputs
+    annual_elec_input_kwh = capacity_kw * (capacity_factor * 8760)
+    # Convert MWh/t to kWh/t by multiplying by 1000
+    annual_capacity_tonnes = annual_elec_input_kwh / (mwh_per_t * 1000)
     
-    raw_capex_bop = molecule_costs[molecule_titles['3 Hydrogen BOP'], 
-                                   mol_cost_titles['Capex (GBP/t)']] * annual_capacity_tonnes
-    raw_capex_stack = molecule_costs[molecule_titles['4 Hydrogen stack'],
-                                     mol_cost_titles['Capex (GBP/t)']] * annual_capacity_tonnes
+    # Fix: Calculate H2 energy output using the physical energy density constant
+    annual_h2_output_kwh = annual_capacity_tonnes * KWH_PER_TONNE_H2 
     
-    raw_opex_bop = molecule_costs[molecule_titles['3 Hydrogen BOP'], 
-                                  mol_cost_titles['Opex (GBP/t)']] * annual_capacity_tonnes
-    raw_opex_stack = molecule_costs[molecule_titles['4 Hydrogen stack'], 
-                                    mol_cost_titles['Opex (GBP/t)']] * annual_capacity_tonnes
+    # 2. Financial Metrics Extraction
+    raw_capex_bop = (molecule_costs[molecule_titles['3 Hydrogen BOP'], 
+                                   mol_cost_titles['Capex (GBP/t)']] * 
+                     annual_capacity_tonnes)
+    raw_capex_stack = (molecule_costs[molecule_titles['4 Hydrogen stack'],
+                                     mol_cost_titles['Capex (GBP/t)']] * 
+                       annual_capacity_tonnes)
+
+    raw_opex_bop = (molecule_costs[molecule_titles['3 Hydrogen BOP'], 
+                                  mol_cost_titles['Opex (GBP/t)']] * 
+                    annual_capacity_tonnes)
+    raw_opex_stack = (molecule_costs[molecule_titles['4 Hydrogen stack'], 
+                                    mol_cost_titles['Opex (GBP/t)']] * 
+                      annual_capacity_tonnes)
 
     t_project = int(molecule_costs[molecule_titles['3 Hydrogen BOP'],
                                    mol_cost_titles['Lifetime']]) 
     t_stack = int(molecule_costs[molecule_titles['4 Hydrogen stack'],
                                  mol_cost_titles['Lifetime']])
-    dr = molecule_costs[molecule_titles['3 Hydrogen BOP'],
+    dr = molecule_costs[molecule_titles['3 Hydrogen BOP'], 
                         mol_cost_titles['Discount rate']]
 
-    # Calculate annual energy and feedstock costs
-    annual_elec_input_kwh = capacity_kw * (capacity_factor * 8760)
-    
-    # Apply efficiency to get H2 energy output
-    annual_h2_output_kwh = annual_elec_input_kwh * efficiency 
-    
-    # Absolute annual electricity cost in £
+    # Absolute annual electricity cost (£)
     annual_elec_cost_gbp = annual_elec_input_kwh * elec_price
 
-    # Cash Flow Setup
+    # 3. Cash Flow & Discounting Setup
     npv_costs = raw_capex_bop + raw_capex_stack  # Year 0 Upfront Costs (£)
     npv_generation = 0
+    
+    costs_no_dr = raw_capex_bop + raw_capex_stack 
+    generation_no_dr = 0
 
-    # 5. Lifetime Loop
+    # 4. Lifetime Loop
     for age in range(1, t_project + 1):
-        # Total absolute £ spent this year
-        lifetime_year_costs = raw_opex_bop + raw_opex_stack + annual_elec_cost_gbp
+        lifetime_year_costs = (raw_opex_bop + raw_opex_stack + 
+                               annual_elec_cost_gbp)
         
-        # Add stack replacement cost if applicable
+        # Stack replacement logic
         if age % t_stack == 0 and age < t_project:
             lifetime_year_costs += raw_capex_stack
             
@@ -99,9 +107,15 @@ def get_hydrogen_lc(data, year, titles):
         
         npv_costs += lifetime_year_costs / discount_factor
         npv_generation += annual_h2_output_kwh / discount_factor
+        
+        costs_no_dr += lifetime_year_costs  
+        generation_no_dr += annual_h2_output_kwh  
 
-    # Final division: Total Discounted £ / Total Discounted kWh
+    # 5. LCOH Calculation & Assignment
     lcoh = npv_costs / npv_generation
-    data['gm_lcoh'][:,0,0] = lcoh
+    lcoh_no_dr = costs_no_dr / generation_no_dr
     
+    data['gm_lcoh'][:, 0, 0] = lcoh
+    data['gm_lcoh_no_dr'][:, 0, 0] = lcoh_no_dr
+
     return data
