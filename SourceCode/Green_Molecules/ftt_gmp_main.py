@@ -65,9 +65,18 @@ def solve(data, time_lag, titles, histend, year, domain):
         Model variables for the given year of solution
 
     """
-    # HYDROGEN
-    data = get_hydrogen_lc(data, year, titles)
-    
-    # CDR
-    data = get_doc_lc(data, year, titles)
-    data = get_dac_lc(data, year, titles)
+    # MOLECULE PRODUCTION
+    molecule_titles = {category: index for index, category 
+                       in enumerate(titles['titles_molecules'])}
+    mol_cost_titles = {category: index for index, category 
+                       in enumerate(titles['cost_titles_molecules'])}
+    data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
+
+
+    # CO2 REMOVAL
+    rem_cost_titles = {category: index for index, category 
+                       in enumerate(titles['cost_titles_removal'])}
+    removal_titles = {category: index for index, category 
+                       in enumerate(titles['titles_removal'])}
+    data = get_doc_lc(data, year, rem_cost_titles, removal_titles)
+    data = get_dac_lc(data, year, rem_cost_titles, removal_titles)

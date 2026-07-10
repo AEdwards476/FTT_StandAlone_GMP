@@ -17,7 +17,7 @@ import numpy as np
 
 # local library imports
 
-def get_hydrogen_lc(data, year, titles):
+def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     """
     Returns current year levelised costs of hydrogen production in £/kwh.
     Modifies the input 'data' dictionary in-place.
@@ -28,20 +28,17 @@ def get_hydrogen_lc(data, year, titles):
         Model variables for given year of solution
     year: int
         Current year
-    titles: dictionary of lists
-        Dictionary containing all title classification
+    mol_cost_titles: dictionary
+        Dictionary containing the indices for the molecule cost titles
+    molecule_titles: dictionary
+        Dictionary containing the indices for the molecule titles
 
     Returns
     ----------
     data: Global model data dictionary, updated with new levelised costs of 
         hydrogen production
     """
-    # Categories for the molecule cost matrix
-    mol_cost_titles = {category: index for index, category 
-                       in enumerate(titles['cost_titles_molecules'])}
-    molecule_titles = {category: index for index, category 
-                       in enumerate(titles['titles_molecules'])}
-    
+
     molecule_costs = data['gm_costs_molecules'][0, :, :].copy()
     
     # Constants

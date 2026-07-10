@@ -17,7 +17,7 @@ import numpy as np
 
 # local library imports
 
-def get_dac_lc(data, year, titles):
+def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     """
     Returns current year levelised costs of DAC production in £/tCO2.
     Modifies the input 'data' dictionary in-place.
@@ -28,8 +28,10 @@ def get_dac_lc(data, year, titles):
         Model variables for given year of solution
     year: int
         Current year
-    titles: dictionary of lists
-        Dictionary containing all title classification
+    rem_cost_titles: dictionary
+        Dictionary containing the indices for the cost titles
+    removal_titles: dictionary
+        Dictionary containing the indices for the removal titles
 
     Returns
     ----------
@@ -37,10 +39,10 @@ def get_dac_lc(data, year, titles):
         DAC production
     """
     # Categories for the molecule cost matrix
-    rem_cost_titles = {category: index for index, category 
-                       in enumerate(titles['cost_titles_removal'])}
-    removal_titles = {category: index for index, category 
-                       in enumerate(titles['titles_removal'])}
+    # rem_cost_titles = {category: index for index, category 
+    #                    in enumerate(titles['cost_titles_removal'])}
+    # removal_titles = {category: index for index, category 
+    #                    in enumerate(titles['titles_removal'])}
     
     removal_costs = data['gm_costs_removal'][0, :, :].copy()
 
