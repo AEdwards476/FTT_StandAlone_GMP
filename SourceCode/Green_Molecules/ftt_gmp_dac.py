@@ -13,6 +13,7 @@ Functions included:
 """
 
 # global imports
+import numpy as np
 
 # local library imports
 

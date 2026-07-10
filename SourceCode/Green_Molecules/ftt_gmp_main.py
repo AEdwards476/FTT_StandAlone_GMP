@@ -18,7 +18,10 @@ Functions included:
 import numpy as np
 
 # Local library imports
+from SourceCode.Green_Molecules.ftt_gmp_dac import get_dac_lc
+from SourceCode.Green_Molecules.ftt_gmp_doc import get_doc_lc
 from SourceCode.Green_Molecules.ftt_gmp_hydrogen import get_hydrogen_lc
+
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
@@ -62,6 +65,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         Model variables for the given year of solution
 
     """
+    # HYDROGEN
     data = get_hydrogen_lc(data, year, titles)
-
-    pass
+    
+    # CDR
+    data = get_doc_lc(data, year, titles)
+    data = get_dac_lc(data, year, titles)
