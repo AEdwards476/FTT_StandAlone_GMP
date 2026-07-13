@@ -21,6 +21,7 @@ import numpy as np
 from SourceCode.Green_Molecules.ftt_gmp_dac import get_dac_lc
 from SourceCode.Green_Molecules.ftt_gmp_doc import get_doc_lc
 from SourceCode.Green_Molecules.ftt_gmp_hydrogen import get_hydrogen_lc
+from SourceCode.Green_Molecules.ftt_gmp_methane import get_methane_lc
 
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
@@ -65,14 +66,6 @@ def solve(data, time_lag, titles, histend, year, domain):
         Model variables for the given year of solution
 
     """
-    # MOLECULE PRODUCTION
-    molecule_titles = {category: index for index, category 
-                       in enumerate(titles['titles_molecules'])}
-    mol_cost_titles = {category: index for index, category 
-                       in enumerate(titles['cost_titles_molecules'])}
-    data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
-
-
     # CO2 REMOVAL
     rem_cost_titles = {category: index for index, category 
                        in enumerate(titles['cost_titles_removal'])}
@@ -80,3 +73,12 @@ def solve(data, time_lag, titles, histend, year, domain):
                        in enumerate(titles['titles_removal'])}
     data = get_doc_lc(data, year, rem_cost_titles, removal_titles)
     data = get_dac_lc(data, year, rem_cost_titles, removal_titles)
+    
+    # MOLECULE PRODUCTION
+    molecule_titles = {category: index for index, category 
+                       in enumerate(titles['titles_molecules'])}
+    mol_cost_titles = {category: index for index, category 
+                       in enumerate(titles['cost_titles_molecules'])}
+    data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
+    data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
+                          co2_type = "DAC")

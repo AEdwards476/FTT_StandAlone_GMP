@@ -40,16 +40,15 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     """
 
     molecule_costs = data['gm_costs_molecules'][0, :, :].copy()
-    
-    # Constants
-    KWH_PER_TONNE_H2 = 33330  # LHV of Hydrogen (~33.33 kWh/kg)
 
-    # PLACEHOLDER VALUES FOR NOW
-    capacity_kw = 6500 
-    capacity_factor = 0.90   # 90% utilization
+    capacity_kw = 6500      # Placeholder
+    capacity_factor = molecule_costs[molecule_titles['3 Hydrogen BOP'],
+                                    mol_cost_titles['Capacity factor']]
     mwh_per_t = molecule_costs[molecule_titles['3 Hydrogen BOP'],
                                mol_cost_titles['Efficiency (MWh/t)']]
-    # Electricity price in £/kWh -- hardcoded for now
+    kwh_per_t_h2 = molecule_costs[molecule_titles['3 Hydrogen BOP'],
+                                  mol_cost_titles['Energy content (kWh/t)']]
+    # Electricity price in £/kWh -- Placeholder, hardcoded for now
     elec_price = 0.10
     elec_price_sd = 0.02
     
@@ -57,7 +56,7 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     annual_elec_input_kwh = capacity_kw * (capacity_factor * 8760)
     # Convert MWh/t to kWh/t by multiplying by 1000 
     annual_capacity_tonnes = annual_elec_input_kwh / (mwh_per_t * 1000)
-    annual_h2_output_kwh = annual_capacity_tonnes * KWH_PER_TONNE_H2 
+    annual_h2_output_kwh = annual_capacity_tonnes * kwh_per_t_h2
     
     # 2. Financial Metrics Extraction
     raw_capex_bop = (molecule_costs[molecule_titles['3 Hydrogen BOP'], 
