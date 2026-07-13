@@ -90,8 +90,8 @@ def get_lcoe(data, year, mol_cost_titles, molecule_titles,
         mol_costs[fg_idx, mol_cost_titles['Fuel cost SD']])
 
     ch4_idx = molecule_titles['2 Synthetic methane']
-    molecule_fuel_prices[ch4_idx] = data['gm_lcom'][0, 0, 0]
-    molecule_fuel_sd[ch4_idx] = data['gm_lcom_sd'][0, 0, 0]
+    # Note: methane LCOM selection (DAC vs DOC) is handled per-pathway in the
+    # loop below via the removal interaction matrix; no single price set here.
 
     h2_idx = molecule_titles['3 Hydrogen BOP']
     molecule_fuel_prices[h2_idx] = data['gm_lcoh'][0, 0, 0]
@@ -150,22 +150,35 @@ def get_lcoe(data, year, mol_cost_titles, molecule_titles,
         # Annual fuel input (kWh_fuel/year)
         annual_fuel_kwh = annual_elec_kwh / efficiency if efficiency > 0 else 0.0
 
-        # Fuel cost from applicable molecule
+        # Fuel cost and removal cost — handling differs for methane pathways.
+        # For methane: the removal interaction matrix encodes which CO2 source
+        # was used to produce the methane (DAC or DOC), so it selects the
+        # correct LCOM rather than charging a combustion-stage removal cost.
+        # For fossil gas / hydrogen: the matrix charges a combustion removal cost.
         m_vec = inter_mol[p_idx, :]
-        fuel_price = float(np.dot(m_vec, molecule_fuel_prices))  # GBP/kWh_fuel
-        fuel_sd = float(np.dot(m_vec, molecule_fuel_sd))
-        annual_fuel_cost = annual_fuel_kwh * fuel_price
-        annual_fuel_variance = (annual_fuel_kwh * fuel_sd) ** 2
-
-        # CO2 removal cost from applicable removal technology
-        # Residual CO2 after CCS (gCO2/kWh) converted to tCO2/kWh
         r_vec = inter_rem[p_idx, :]
-        co2_per_kwh_tco2 = co2_g_per_kwh * 1e-6
-        removal_price = float(np.dot(r_vec, removal_prices))      # GBP/tCO2
-        removal_price_sd = float(np.dot(r_vec, removal_prices_sd))
-        annual_removal_cost = annual_elec_kwh * co2_per_kwh_tco2 * removal_price
-        annual_removal_variance = (
-            annual_elec_kwh * co2_per_kwh_tco2 * removal_price_sd) ** 2
+
+        if float(m_vec[ch4_idx]) > 0:
+            # Synthetic methane pathway: pick LCOM for the correct CO2 source
+            fuel_price = (float(r_vec[dac_idx]) * data['gm_lcom'][0, 0, 0] +
+                          float(r_vec[doc_idx]) * data['gm_lcom_doc'][0, 0, 0])
+            fuel_sd    = (float(r_vec[dac_idx]) * data['gm_lcom_sd'][0, 0, 0] +
+                          float(r_vec[doc_idx]) * data['gm_lcom_doc_sd'][0, 0, 0])
+            annual_removal_cost     = 0.0
+            annual_removal_variance = 0.0
+        else:
+            # Fossil gas / hydrogen: standard fuel price + combustion removal cost
+            fuel_price = float(np.dot(m_vec, molecule_fuel_prices))
+            fuel_sd    = float(np.dot(m_vec, molecule_fuel_sd))
+            co2_per_kwh_tco2 = co2_g_per_kwh * 1e-6
+            removal_price    = float(np.dot(r_vec, removal_prices))
+            removal_price_sd = float(np.dot(r_vec, removal_prices_sd))
+            annual_removal_cost     = annual_elec_kwh * co2_per_kwh_tco2 * removal_price
+            annual_removal_variance = (
+                annual_elec_kwh * co2_per_kwh_tco2 * removal_price_sd) ** 2
+
+        annual_fuel_cost     = annual_fuel_kwh * fuel_price
+        annual_fuel_variance = (annual_fuel_kwh * fuel_sd) ** 2
 
         # NPV calculation — year 0: upfront capex
         npv_costs = raw_capex

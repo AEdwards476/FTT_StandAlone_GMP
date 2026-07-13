@@ -83,6 +83,8 @@ def solve(data, time_lag, titles, histend, year, domain):
     data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
     data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
                           co2_type = "DAC")
+    data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
+                          co2_type = "DOC")
     
     # COMBUSTION
     comb_cost_titles = {category: index for index, category

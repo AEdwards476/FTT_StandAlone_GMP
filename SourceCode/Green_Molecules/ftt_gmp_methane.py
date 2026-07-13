@@ -148,8 +148,12 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     total_costs_sd = np.sqrt(npv_costs_variance)
     lcom_sd = total_costs_sd / npv_generation
 
-    # Save to data dictionary
-    data['gm_lcom'][:, 0, 0] = lcom
-    data['gm_lcom_sd'][:, 0, 0] = lcom_sd
+    # Save to data dictionary — variable depends on CO2 source used
+    if co2_type == "DOC":
+        data['gm_lcom_doc'][:, 0, 0] = lcom
+        data['gm_lcom_doc_sd'][:, 0, 0] = lcom_sd
+    else:
+        data['gm_lcom'][:, 0, 0] = lcom
+        data['gm_lcom_sd'][:, 0, 0] = lcom_sd
 
     return data
