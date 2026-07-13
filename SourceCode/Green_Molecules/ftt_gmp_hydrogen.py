@@ -98,24 +98,33 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     annual_elec_variance = (annual_elec_input_kwh * elec_price_sd) ** 2
 
     # 3. Cash Flow & Discounting Setup
-    npv_costs = raw_capex_bop + raw_capex_stack  # Year 0 Upfront Costs (£)
+    lead_time = int(molecule_costs[molecule_titles['3 Hydrogen BOP'],
+                                   mol_cost_titles['Lead time']])
+    capex_frac = 1.0 / lead_time
+
+    # Capex spread evenly over the construction period (years 0 to lead_time-1)
+    npv_costs = 0.0
+    npv_costs_variance = 0.0
+    for c in range(lead_time):
+        df_c = (1 + dr) ** c
+        npv_costs += (raw_capex_bop + raw_capex_stack) * capex_frac / df_c
+        npv_costs_variance += ((raw_capex_bop_sd * capex_frac / df_c) ** 2 +
+                               (raw_capex_stack_sd * capex_frac / df_c) ** 2)
+
     npv_generation = 0
-    
-    # Year 0 variance terms
-    npv_costs_variance = (raw_capex_bop_sd ** 2) + (raw_capex_stack_sd ** 2)
-    
-    costs_no_dr = raw_capex_bop + raw_capex_stack 
+    costs_no_dr = raw_capex_bop + raw_capex_stack
     generation_no_dr = 0
 
-    # 4. Lifetime Loop
-    for age in range(1, t_project + 1):
+    # 4. Lifetime Loop (operational years start after lead time)
+    for age in range(lead_time, lead_time + t_project):
+        op_age = age - lead_time
         lifetime_year_costs = (raw_opex_bop + raw_opex_stack + 
                                annual_elec_cost_gbp)
         year_variance = ((raw_opex_bop_sd ** 2) + (raw_opex_stack_sd ** 2) +
                          annual_elec_variance)
 
-        # Stack replacement logic
-        if age % t_stack == 0 and age < t_project:
+        # Stack replacement at every t_stack operational years (not at start or end)
+        if op_age > 0 and op_age % t_stack == 0 and op_age < t_project:
             lifetime_year_costs += raw_capex_stack
             year_variance += (raw_capex_stack_sd ** 2)
             

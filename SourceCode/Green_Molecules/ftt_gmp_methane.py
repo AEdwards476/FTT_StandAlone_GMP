@@ -111,12 +111,22 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
 
 
     # 5. Initialize Cash Flows
-    npv_costs = raw_capex  # Year 0 upfront cost
-    npv_generation = 0
-    npv_costs_variance = sd_capex ** 2  # Year 0 variance
+    lead_time = int(molecule_costs[molecule_titles['2 Synthetic methane'],
+                                   mol_cost_titles['Lead time']])
+    capex_frac = 1.0 / lead_time
 
-    # 6. Lifetime Loop
-    for age in range(1, t_project + 1):
+    # Capex spread evenly over the construction period (years 0 to lead_time-1)
+    npv_costs = 0.0
+    npv_costs_variance = 0.0
+    for c in range(lead_time):
+        df_c = (1 + dr) ** c
+        npv_costs += raw_capex * capex_frac / df_c
+        npv_costs_variance += (sd_capex * capex_frac / df_c) ** 2
+
+    npv_generation = 0
+
+    # 6. Lifetime Loop (operational years start after lead time)
+    for age in range(lead_time, lead_time + t_project):
         # Sum total annual O&M and feedstock costs
         lifetime_year_costs = (raw_opex + annual_h2_cost_gbp + annual_co2_cost_gbp +
                                annual_elec_cost_gbp)
