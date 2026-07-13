@@ -47,10 +47,11 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     removal_costs = data['gm_costs_removal'][0, :, :].copy()
 
     # PLACEHOLDER VALUES FOR NOW
-    capacity_tCO2 = 1000 
-    capacity_factor = 0.90   # 90% utilization
+    capacity_tCO2 = 1000
+    capacity_factor = float(removal_costs[removal_titles['1 DAC'],
+                                         rem_cost_titles['Capacity factor']])
     mwh_per_tCO2 = removal_costs[removal_titles['1 DAC'],
-                                 rem_cost_titles['Efficiency (MWh/tCO2)']]
+                                 rem_cost_titles['Elec efficiency (MWh/tCO2)']]
     
     # Electricity price in £/kWh -- hardcoded for now
     elec_price = 0.10

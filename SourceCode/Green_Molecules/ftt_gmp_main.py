@@ -22,6 +22,7 @@ from SourceCode.Green_Molecules.ftt_gmp_dac import get_dac_lc
 from SourceCode.Green_Molecules.ftt_gmp_doc import get_doc_lc
 from SourceCode.Green_Molecules.ftt_gmp_hydrogen import get_hydrogen_lc
 from SourceCode.Green_Molecules.ftt_gmp_methane import get_methane_lc
+from SourceCode.Green_Molecules.ftt_gmp_lcoe import get_lcoe
 
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
@@ -82,3 +83,14 @@ def solve(data, time_lag, titles, histend, year, domain):
     data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
     data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
                           co2_type = "DAC")
+    
+    # COMBUSTION
+    comb_cost_titles = {category: index for index, category
+                        in enumerate(titles['cost_titles_combustion'])}
+    combustion_titles = {category: index for index, category
+                         in enumerate(titles['titles_combustion'])}
+    pathway_titles = {category: index for index, category
+                      in enumerate(titles['titles_gm_pathways'])}
+    data = get_lcoe(data, year, mol_cost_titles, molecule_titles,
+                    comb_cost_titles, combustion_titles, pathway_titles,
+                    rem_cost_titles, removal_titles)
