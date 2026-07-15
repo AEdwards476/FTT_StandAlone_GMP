@@ -317,8 +317,7 @@ class RunFTT:
                 
             if "FTT-GMP" in self.ftt_modules:
                 ftt_gmp.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+                                        self.titles, self.histend, tl[y])
             
             # 2. Electricity demand feedback (aggregates demand from all sectors)
             if scenario != "S0":
