@@ -1,3 +1,3 @@
 ﻿,Capex (GBP/tCO2),Capex SD,Fuel cost (GBP/tCO2),Fuel cost SD,Opex (GBP/tCO2),Opex SD,Lifetime,Lead time,Capacity factor,Elec efficiency (MWh/tCO2),Heat efficiency (MWh/tCO2),Capex learning exp,Opex learning exp,Efficiency learning exp,Discount rate
-1 DAC,5961,1788,0,0,356,106,20,2,0.9,1,3,-0.05,-0.12,-0.075,0.15
-2 DOC,5630,1689,0,0,8,1,20,2,0.9,4.71,0,-0.05,-0.12,0,0.15
+1 DAC,5961,1788,0,0,356,106,20,2,0.9,0.7,3.31,-0.184424571,-0.112474729,-0.074000581,0.15
+2 DOC,5630,1689,0,0,8,1,15,2,0.9,4.71,0,-0.184424571,-0.112474729,-0.074000581,0.15

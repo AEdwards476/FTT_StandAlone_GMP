@@ -50,18 +50,24 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     capacity_tCO2 = 1000
     capacity_factor = float(removal_costs[removal_titles['1 DAC'],
                                          rem_cost_titles['Capacity factor']])
-    mwh_per_tCO2 = removal_costs[removal_titles['1 DAC'],
+    mwh_per_tCO2_elec = removal_costs[removal_titles['1 DAC'],
                                  rem_cost_titles['Elec efficiency (MWh/tCO2)']]
+    mwh_per_tCO2_heat = removal_costs[removal_titles['1 DAC'],
+                                 rem_cost_titles['Heat efficiency (MWh/tCO2)']]
     
     # Electricity price in £/kWh -- hardcoded for now
     elec_price = 0.10
     elec_price_sd = 0.02
+    # Heat price in £/kWh th -- hardcoded for now
+    heat_price = 0.04
+    heat_price_sd = 0.008
     
     # 1. Production and Resource Inputs
     # Annual drawdown (tCO2/year)
     annual_removal_tCO2 = capacity_tCO2 * capacity_factor
     # Annual electricity input (kWh/year)
-    annual_elec_input_kwh = annual_removal_tCO2 * mwh_per_tCO2 * 1000
+    annual_elec_input_kwh = annual_removal_tCO2 * mwh_per_tCO2_elec * 1000
+    annual_heat_input_kwh = annual_removal_tCO2 * mwh_per_tCO2_heat * 1000
     
     # 2. Financial Metrics Extraction
     raw_capex = (removal_costs[removal_titles['1 DAC'], 
@@ -85,12 +91,17 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     # Absolute annual electricity cost (£)
     annual_elec_cost_gbp = annual_elec_input_kwh * elec_price
     annual_elec_variance = (annual_elec_input_kwh * elec_price_sd) ** 2
+    
+    # Absolute annual heat cost (£)
+    annual_heat_cost_gbp = annual_heat_input_kwh * heat_price
+    annual_heat_variance = (annual_heat_input_kwh * heat_price_sd) ** 2
 
     # 3. Cash Flow & Discounting Setup
     npv_costs = (
         0.5 * raw_capex / (1 + dr) ** 0 + 
         0.5 * raw_capex / (1 + dr) ** 1
-    ) # 2 year build time with costs split evenly between the 2 years (£)
+    ) 
+    # 2 year build time with costs split evenly between the 2 years (£)
     npv_generation = 0
     npv_cost_variance = (
         (0.5 * raw_capex_sd / (1 + dr) ** 0) ** 2 + 
@@ -104,9 +115,10 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     # 4. Lifetime Loop
     for age in range(2, lt_project + 2):
         lifetime_year_costs = (raw_opex + 
-                               annual_elec_cost_gbp)
-        year_variance = (raw_opex_sd ** 2) + annual_elec_variance
-        
+                               annual_elec_cost_gbp + 
+                               annual_heat_cost_gbp)
+        year_variance = (raw_opex_sd ** 2) + annual_elec_variance + annual_heat_variance
+
         discount_factor = (1 + dr) ** age
         
         npv_costs += lifetime_year_costs / discount_factor
