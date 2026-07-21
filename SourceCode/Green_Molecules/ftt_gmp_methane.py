@@ -49,11 +49,12 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
                                      mol_cost_titles['Capacity factor']]
     mwh_per_t = molecule_costs[molecule_titles['2 Synthetic methane'],
                                mol_cost_titles['Efficiency (MWh/t)']]
-    # Electricity price in £/kWh -- Placeholder, hardcoded for now
-    elec_price = 0.10
-    elec_price_sd = 0.02
     kwh_per_t_ch4 = molecule_costs[molecule_titles['2 Synthetic methane'],
-                                   mol_cost_titles['Energy content (kWh/t)']]
+                                mol_cost_titles['Energy content (kWh/t)']]
+
+    # Electricity price in £/kWh
+    elec_price = data['gm_elec_price'][0, 0, 0]
+    elec_price_sd = data['gm_elec_price_sd'][0, 0, 0]
     
     h2_price = data['gm_lcoh'][0, 0, 0]                 # £/kWh
     h2_price_sd = data['gm_lcoh_sd'][0, 0, 0]  

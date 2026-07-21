@@ -48,9 +48,9 @@ def get_doc_lc(data, year, rem_cost_titles, removal_titles):
     mwh_per_tCO2 = removal_costs[removal_titles['2 DOC'],
                                  rem_cost_titles['Elec efficiency (MWh/tCO2)']]
     
-    # Electricity price in £/kWh -- hardcoded for now
-    elec_price = 0.10
-    elec_price_sd = 0.02
+    # Electricity price in £/kWh
+    elec_price = data['gm_elec_price'][0, 0, 0]
+    elec_price_sd = data['gm_elec_price_sd'][0, 0, 0]
     
     # 1. Production and Resource Inputs
     # Annual drawdown (tCO2/year)

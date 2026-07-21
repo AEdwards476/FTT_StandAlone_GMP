@@ -55,9 +55,10 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     mwh_per_tCO2_heat = removal_costs[removal_titles['1 DAC'],
                                  rem_cost_titles['Heat efficiency (MWh/tCO2)']]
     
-    # Electricity price in £/kWh -- hardcoded for now
-    elec_price = 0.10
-    elec_price_sd = 0.02
+    # Electricity price in £/kWh
+    elec_price = data['gm_elec_price'][0, 0, 0]
+    elec_price_sd = data['gm_elec_price_sd'][0, 0, 0]
+    
     # Heat price in £/kWh th -- hardcoded for now
     heat_price = 0.04
     heat_price_sd = 0.008

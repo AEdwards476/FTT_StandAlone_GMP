@@ -48,9 +48,10 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
                                mol_cost_titles['Efficiency (MWh/t)']]
     kwh_per_t_h2 = molecule_costs[molecule_titles['3 Hydrogen BOP'],
                                   mol_cost_titles['Energy content (kWh/t)']]
-    # Electricity price in £/kWh -- Placeholder, hardcoded for now
-    elec_price = 0.10
-    elec_price_sd = 0.02
+    
+    # Electricity price in £/kWh
+    elec_price = data['gm_elec_price'][0, 0, 0]
+    elec_price_sd = data['gm_elec_price_sd'][0, 0, 0]
     
     # 1. Production and Resource Inputs
     annual_elec_input_kwh = capacity_kw * (capacity_factor * 8760)

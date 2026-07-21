@@ -407,3 +407,5 @@ gm_lcom,Levelised cost of E-methane (DAC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-
 gm_lcom_sd,Standard deviation of E-methane cost (DAC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcom_doc,Levelised cost of E-methane (DOC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcom_doc_sd,Standard deviation of E-methane cost (DOC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_elec_price,Average electricity price,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_elec_price_sd,Standard deviation of electricity price,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
