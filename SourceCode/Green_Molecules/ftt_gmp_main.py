@@ -73,48 +73,70 @@ def solve(data, time_lag, titles, histend, year):
     for var in time_lag.keys():
         data_dt[var] = np.copy(time_lag[var])
         
-    # Set number of iterations for the solution loop
-    no_it = int(data['noit'][0, 0, 0])
-    
-    # MAIN IN-YEAR SOLUTION LOOP    
-    for t in range(1, no_it + 1):
-
-        # CO2 REMOVAL
-        rem_cost_titles = {category: index for index, category 
+    # Init titles
+    rem_cost_titles = {category: index for index, category 
                         in enumerate(titles['cost_titles_removal'])}
-        removal_titles = {category: index for index, category 
+    removal_titles = {category: index for index, category 
                         in enumerate(titles['titles_removal'])}
+    molecule_titles = {category: index for index, category 
+                        in enumerate(titles['titles_molecules'])}
+    mol_cost_titles = {category: index for index, category 
+                        in enumerate(titles['cost_titles_molecules'])}
+    comb_cost_titles = {category: index for index, category
+                        in enumerate(titles['cost_titles_combustion'])}
+    combustion_titles = {category: index for index, category
+                        in enumerate(titles['titles_combustion'])}
+    pathway_titles = {category: index for index, category
+                      in enumerate(titles['titles_gm_pathways'])}
+
+    # Init variables in historical period
+    if year <= histend['gm_costs_molecules']:
+        # CO2 REMOVAL
         data = get_doc_lc(data, year, rem_cost_titles, removal_titles)
         data = get_dac_lc(data, year, rem_cost_titles, removal_titles)
-        
         # MOLECULE PRODUCTION
-        molecule_titles = {category: index for index, category 
-                        in enumerate(titles['titles_molecules'])}
-        mol_cost_titles = {category: index for index, category 
-                        in enumerate(titles['cost_titles_molecules'])}
         data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
         data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
                             co2_type = "DAC")
         data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
                             co2_type = "DOC")
-        
         # COMBUSTION
-        comb_cost_titles = {category: index for index, category
-                            in enumerate(titles['cost_titles_combustion'])}
-        combustion_titles = {category: index for index, category
-                            in enumerate(titles['titles_combustion'])}
-        pathway_titles = {category: index for index, category
-                        in enumerate(titles['titles_gm_pathways'])}
         data = get_lcoe(data, year, mol_cost_titles, molecule_titles,
                         comb_cost_titles, combustion_titles, pathway_titles,
                         rem_cost_titles, removal_titles)
+    
+    # Simulation period here
+    if year > histend['gm_costs_molecules']:
+        # Set number of iterations for the solution loop
+        no_it = int(data['noit'][0, 0, 0])
         
-        if year > histend['gm_costs_molecules'] :
-            calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, 
-                     mol_cost_titles, comb_cost_titles)
-        
-        # Update data_dt for the next timestep
-        for var in time_lag.keys():
-            data_dt[var] = np.copy(data[var])
-                
+        # MAIN IN-YEAR SOLUTION LOOP    
+        for t in range(1, no_it + 1):
+            
+            # Shares Equation here!
+
+            # CO2 REMOVAL
+            data = get_doc_lc(data, year, rem_cost_titles, removal_titles)
+            data = get_dac_lc(data, year, rem_cost_titles, removal_titles)
+            
+            # MOLECULE PRODUCTION
+            data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
+            data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
+                                co2_type = "DAC")
+            data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
+                                co2_type = "DOC")
+            
+            # COMBUSTION
+            data = get_lcoe(data, year, mol_cost_titles, molecule_titles,
+                            comb_cost_titles, combustion_titles, pathway_titles,
+                            rem_cost_titles, removal_titles)
+            
+            if year > histend['gm_costs_molecules']:
+                calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, 
+                        mol_cost_titles, comb_cost_titles)
+            
+            # Update data_dt for the next timestep
+            for var in time_lag.keys():
+                data_dt[var] = np.copy(data[var])
+                    
     return data
