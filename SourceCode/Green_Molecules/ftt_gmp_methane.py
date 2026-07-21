@@ -44,7 +44,7 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     
     molecule_costs = data['gm_costs_molecules'][0, :, :].copy()
     
-    capacity_kw = 3000        # Placeholder
+    capacity_kw = 600        # Placeholder
     capacity_factor = molecule_costs[molecule_titles['2 Synthetic methane'],
                                      mol_cost_titles['Capacity factor']]
     mwh_per_t = molecule_costs[molecule_titles['2 Synthetic methane'],
