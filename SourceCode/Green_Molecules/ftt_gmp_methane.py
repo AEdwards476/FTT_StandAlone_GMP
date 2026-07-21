@@ -109,7 +109,6 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     annual_co2_variance = (annual_co2_needed_tonnes * co2_price_sd) ** 2
     annual_elec_variance = (annual_elec_input_kwh * elec_price_sd) ** 2
 
-
     # 5. Initialize Cash Flows
     lead_time = int(molecule_costs[molecule_titles['2 Synthetic methane'],
                                    mol_cost_titles['Lead time']])
@@ -128,12 +127,12 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     # 6. Lifetime Loop (operational years start after lead time)
     for age in range(lead_time, lead_time + t_project):
         # Sum total annual O&M and feedstock costs
-        lifetime_year_costs = (raw_opex + annual_h2_cost_gbp + annual_co2_cost_gbp +
-                               annual_elec_cost_gbp)
+        lifetime_year_costs = (raw_opex + annual_h2_cost_gbp + 
+                               annual_co2_cost_gbp + annual_elec_cost_gbp)
         
         # Total variance for this operating year (assumed independent inputs)
-        year_variance = ((sd_opex ** 2) + annual_h2_variance + annual_co2_variance +
-                         annual_elec_variance)
+        year_variance = ((sd_opex ** 2) + annual_h2_variance +
+                         annual_co2_variance + annual_elec_variance)
         
         discount_factor = (1 + dr) ** age
         

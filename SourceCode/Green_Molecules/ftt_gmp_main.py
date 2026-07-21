@@ -25,7 +25,6 @@ from SourceCode.Green_Molecules.ftt_gmp_methane import get_methane_lc
 from SourceCode.Green_Molecules.ftt_gmp_lcoe import get_lcoe
 from SourceCode.Green_Molecules.ftt_gmp_lbd import calc_lbd
 
-
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
@@ -34,7 +33,6 @@ from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
-
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -112,8 +110,8 @@ def solve(data, time_lag, titles, histend, year):
                         rem_cost_titles, removal_titles)
         
         if year > histend['gm_costs_molecules'] :
-            calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, mol_cost_titles,
-                    comb_cost_titles)
+            calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, 
+                     mol_cost_titles, comb_cost_titles)
         
         # Update data_dt for the next timestep
         for var in time_lag.keys():
