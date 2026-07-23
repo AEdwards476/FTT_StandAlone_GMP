@@ -19,8 +19,14 @@ import numpy as np
 
 def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     """
-    Returns current year levelised costs of hydrogen production in £/kwh.
+        Returns current year levelised costs of hydrogen production in GBP/kWh.
     Modifies the input 'data' dictionary in-place.
+
+        Unit conventions used in this function:
+        - Hydrogen energy content and process efficiency are on an LHV basis.
+        - Molecule CAPEX/OPEX fields labelled as GBP/t are interpreted as
+            GBP/(t/year) and converted to absolute GBP using annual throughput.
+        - Stack lead time is intentionally treated as zero (fast replacement).
 
     Parameters
     -----------
@@ -53,13 +59,15 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     elec_price = data['gm_elec_price'][0, 0, 0]
     elec_price_sd = data['gm_elec_price_sd'][0, 0, 0]
     
-    # 1. Production and Resource Inputs
+    # 1. Production and Resource Inputs (LHV basis)
     annual_elec_input_kwh = capacity_kw * (capacity_factor * 8760)
     # Convert MWh/t to kWh/t by multiplying by 1000 
     annual_capacity_tonnes = annual_elec_input_kwh / (mwh_per_t * 1000)
     annual_h2_output_kwh = annual_capacity_tonnes * kwh_per_t_h2
     
     # 2. Financial Metrics Extraction
+    # Cost columns are labelled as GBP/t in the input matrix but are treated as
+    # specific costs per annual throughput, i.e. GBP/(t/year).
     raw_capex_bop = (molecule_costs[molecule_titles['3 Hydrogen BOP'], 
                                    mol_cost_titles['Capex (GBP/t)']] * 
                      annual_capacity_tonnes)
@@ -73,6 +81,7 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
                                       mol_cost_titles['Capex SD']] *
                         annual_capacity_tonnes)
 
+    # Opex in £/t
     raw_opex_bop = (molecule_costs[molecule_titles['3 Hydrogen BOP'], 
                                   mol_cost_titles['Opex (GBP/t)']] * 
                     annual_capacity_tonnes)
@@ -124,7 +133,8 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
         year_variance = ((raw_opex_bop_sd ** 2) + (raw_opex_stack_sd ** 2) +
                          annual_elec_variance)
 
-        # Stack replacement at every t_stack operational years (not at start or end)
+        # Stack replacement at every t_stack operational years (not at start
+        # or end). No additional lead time is applied for replacement.
         if op_age > 0 and op_age % t_stack == 0 and op_age < t_project:
             lifetime_year_costs += raw_capex_stack
             year_variance += (raw_capex_stack_sd ** 2)
