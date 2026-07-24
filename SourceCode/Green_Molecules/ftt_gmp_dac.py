@@ -38,12 +38,6 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     data: Global model data dictionary, updated with new levelised costs of 
         DAC production
     """
-    # Categories for the molecule cost matrix
-    # rem_cost_titles = {category: index for index, category 
-    #                    in enumerate(titles['cost_titles_removal'])}
-    # removal_titles = {category: index for index, category 
-    #                    in enumerate(titles['titles_removal'])}
-    
     removal_costs = data['gm_costs_removal'][0, :, :].copy()
 
     # PLACEHOLDER VALUES FOR NOW
@@ -85,6 +79,10 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     raw_opex_sd = (removal_costs[removal_titles['1 DAC'], 
                                   rem_cost_titles['Opex SD']] *
                        capacity_tCO2)
+    # Note, storage costs should be per co2 removed rather than nameplate capacity
+    storage_cost = (removal_costs[removal_titles['1 DAC'], 
+                                  rem_cost_titles['Storage (GBP/tCO2)']] *
+                    annual_removal_tCO2)
 
     lt_project = int(removal_costs[removal_titles['1 DAC'], 
                                    rem_cost_titles['Lifetime']])
@@ -118,6 +116,7 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     # 4. Lifetime Loop
     for age in range(2, lt_project + 2):
         lifetime_year_costs = (raw_opex + 
+                               storage_cost +
                                annual_elec_cost_gbp + 
                                annual_heat_cost_gbp)
         year_variance = (raw_opex_sd ** 2) + annual_elec_variance + annual_heat_variance
