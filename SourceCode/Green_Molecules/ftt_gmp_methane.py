@@ -44,7 +44,7 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     
     molecule_costs = data['gm_costs_molecules'][0, :, :].copy()
     
-    capacity_kw = 600        # Placeholder
+    capacity_kw = 600        # Placeholder, assuming this is input kW
     capacity_factor = molecule_costs[molecule_titles['2 Synthetic methane'],
                                      mol_cost_titles['Capacity factor']]
     mwh_per_t = molecule_costs[molecule_titles['2 Synthetic methane'],
@@ -85,15 +85,16 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     annual_co2_needed_tonnes = annual_ch4_output_kwh * co2_req_per_kwh
 
     # 3. Extract Base Costs & Variances
+    # Molecule CapEx and OpEx are input as GBP/kW and annual GBP/(kW.year).
     raw_capex = molecule_costs[molecule_titles['2 Synthetic methane'], 
-                               mol_cost_titles['Capex (GBP/t)']] * annual_capacity_tonnes
+                               mol_cost_titles['Capex (GBP/kW)']] * capacity_kw
     raw_opex = molecule_costs[molecule_titles['2 Synthetic methane'],
-                              mol_cost_titles['Opex (GBP/t)']] * annual_capacity_tonnes
+                              mol_cost_titles['Opex (GBP/kW)']] * capacity_kw
 
     sd_capex = molecule_costs[molecule_titles['2 Synthetic methane'], 
-                              mol_cost_titles['Capex SD']] * annual_capacity_tonnes
+                              mol_cost_titles['Capex SD']] * capacity_kw
     sd_opex = molecule_costs[molecule_titles['2 Synthetic methane'], 
-                             mol_cost_titles['Opex SD']] * annual_capacity_tonnes
+                             mol_cost_titles['Opex SD']] * capacity_kw
 
     t_project = int(molecule_costs[molecule_titles['2 Synthetic methane'],
                                    mol_cost_titles['Lifetime']]) 

@@ -52,8 +52,8 @@ def calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, mol_cost_titles,
     elec_eff_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Elec efficiency (MWh/tCO2)']]
     heat_eff_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Heat efficiency (MWh/tCO2)']]
 
-    capex_molecule = data_dt['gm_costs_molecules'][:, :, mol_cost_titles['Capex (GBP/t)']]
-    opex_molecule = data_dt['gm_costs_molecules'][:, :, mol_cost_titles['Opex (GBP/t)']]
+    capex_molecule = data_dt['gm_costs_molecules'][:, :, mol_cost_titles['Capex (GBP/kW)']]
+    opex_molecule = data_dt['gm_costs_molecules'][:, :, mol_cost_titles['Opex (GBP/kW)']]
     eff_molecule = data_dt['gm_costs_molecules'][:, :, mol_cost_titles['Efficiency (MWh/t)']]
     
     capex_combustion = data_dt['gm_costs_combustion'][:, :, comb_cost_titles['Capex (GBP/kW)']]
@@ -119,8 +119,8 @@ def calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, mol_cost_titles,
     data['gm_costs_removal'][:, :, rem_cost_titles['Elec efficiency (MWh/tCO2)']] = elec_eff_removal * learning_factor_eff_removal
     data['gm_costs_removal'][:, :, rem_cost_titles['Heat efficiency (MWh/tCO2)']] = heat_eff_removal * learning_factor_eff_removal
     
-    data['gm_costs_molecules'][:, :, mol_cost_titles['Capex (GBP/t)']] = capex_molecule * learning_factor_capex_molecule
-    data['gm_costs_molecules'][:, :, mol_cost_titles['Opex (GBP/t)']] = opex_molecule * learning_factor_opex_molecule
+    data['gm_costs_molecules'][:, :, mol_cost_titles['Capex (GBP/kW)']] = capex_molecule * learning_factor_capex_molecule
+    data['gm_costs_molecules'][:, :, mol_cost_titles['Opex (GBP/kW)']] = opex_molecule * learning_factor_opex_molecule
     data['gm_costs_molecules'][:, :, mol_cost_titles['Efficiency (MWh/t)']] = eff_molecule * learning_factor_eff_molecule
     
     data['gm_costs_combustion'][:, :, comb_cost_titles['Capex (GBP/kW)']] = capex_combustion * learning_factor_capex_combustion

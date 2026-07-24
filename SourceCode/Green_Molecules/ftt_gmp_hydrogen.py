@@ -24,8 +24,8 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
 
         Unit conventions used in this function:
         - Hydrogen energy content and process efficiency are on an LHV basis.
-        - Molecule CAPEX/OPEX fields labelled as GBP/t are interpreted as
-            GBP/(t/year) and converted to absolute GBP using annual throughput.
+        - Molecule CAPEX/OPEX fields are in GBP/kW and GBP/(kW.year),
+            converted to absolute GBP using installed capacity (kW).
         - Stack lead time is intentionally treated as zero (fast replacement).
 
     Parameters
@@ -65,35 +65,34 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     annual_capacity_tonnes = annual_elec_input_kwh / (mwh_per_t * 1000)
     annual_h2_output_kwh = annual_capacity_tonnes * kwh_per_t_h2
     
-    # 2. Financial Metrics Extraction
-    # Cost columns are labelled as GBP/t in the input matrix but are treated as
-    # specific costs per annual throughput, i.e. GBP/(t/year).
+        # 2. Financial Metrics Extraction
+        # Molecule CapEx and OpEx are input as GBP/kW and annual GBP/(kW.year).
     raw_capex_bop = (molecule_costs[molecule_titles['3 Hydrogen BOP'], 
-                                   mol_cost_titles['Capex (GBP/t)']] * 
-                     annual_capacity_tonnes)
+                                                                     mol_cost_titles['Capex (GBP/kW)']] * 
+                                         capacity_kw)
     raw_capex_stack = (molecule_costs[molecule_titles['4 Hydrogen stack'],
-                                     mol_cost_titles['Capex (GBP/t)']] * 
-                       annual_capacity_tonnes)
+                                                                         mol_cost_titles['Capex (GBP/kW)']] * 
+                                             capacity_kw)
     raw_capex_bop_sd = (molecule_costs[molecule_titles['3 Hydrogen BOP'],
                                       mol_cost_titles['Capex SD']] *
-                        annual_capacity_tonnes)
+                                                capacity_kw)
     raw_capex_stack_sd = (molecule_costs[molecule_titles['4 Hydrogen stack'],
                                       mol_cost_titles['Capex SD']] *
-                        annual_capacity_tonnes)
+                                                capacity_kw)
 
-    # Opex in £/t
+        # Annual fixed OpEx in GBP/(kW.year)
     raw_opex_bop = (molecule_costs[molecule_titles['3 Hydrogen BOP'], 
-                                  mol_cost_titles['Opex (GBP/t)']] * 
-                    annual_capacity_tonnes)
+                                                                    mol_cost_titles['Opex (GBP/kW)']] * 
+                                        capacity_kw)
     raw_opex_stack = (molecule_costs[molecule_titles['4 Hydrogen stack'], 
-                                    mol_cost_titles['Opex (GBP/t)']] * 
-                      annual_capacity_tonnes)
+                                                                        mol_cost_titles['Opex (GBP/kW)']] * 
+                                            capacity_kw)
     raw_opex_bop_sd = (molecule_costs[molecule_titles['3 Hydrogen BOP'],
                                     mol_cost_titles['Opex SD']] *
-                      annual_capacity_tonnes)
+                                            capacity_kw)
     raw_opex_stack_sd = (molecule_costs[molecule_titles['4 Hydrogen stack'],
                                       mol_cost_titles['Opex SD']] *
-                        annual_capacity_tonnes)
+                                                capacity_kw)
 
     # Lifetimes and discount rates
     t_project = int(molecule_costs[molecule_titles['3 Hydrogen BOP'],
