@@ -71,18 +71,20 @@ def get_dac_lc(data, year, rem_cost_titles, removal_titles):
     annual_heat_input_kwh = annual_removal_tCO2 * mwh_per_tCO2_heat * 1000
     
     # 2. Financial Metrics Extraction
+    # CapEx and fixed annual O&M are input per unit of nameplate capacity,
+    # i.e. GBP/(tCO2/year) of installed plant capacity.
     raw_capex = (removal_costs[removal_titles['1 DAC'], 
-                                   rem_cost_titles['Capex (GBP/tCO2)']] * 
-                     annual_removal_tCO2)
+                                   rem_cost_titles['Capex (GBP/tCO2/year)']] * 
+                     capacity_tCO2)
     raw_capex_sd = (removal_costs[removal_titles['1 DAC'], 
                                    rem_cost_titles['Capex SD']] *
-                        annual_removal_tCO2)
+                        capacity_tCO2)
     raw_opex = (removal_costs[removal_titles['1 DAC'], 
-                                  rem_cost_titles['Opex (GBP/tCO2)']] * 
-                    annual_removal_tCO2)
+                                  rem_cost_titles['Opex (GBP/tCO2/year)']] * 
+                    capacity_tCO2)
     raw_opex_sd = (removal_costs[removal_titles['1 DAC'], 
                                   rem_cost_titles['Opex SD']] *
-                       annual_removal_tCO2)
+                       capacity_tCO2)
 
     lt_project = int(removal_costs[removal_titles['1 DAC'], 
                                    rem_cost_titles['Lifetime']])

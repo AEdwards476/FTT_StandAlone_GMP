@@ -47,8 +47,8 @@ def calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, mol_cost_titles,
     data: Global model data dictionary, updated with new cost matrx values
     """
     # 1. Extract capex, opex, and efficiency values
-    capex_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Capex (GBP/tCO2)']]
-    opex_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Opex (GBP/tCO2)']]
+    capex_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Capex (GBP/tCO2/year)']]
+    opex_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Opex (GBP/tCO2/year)']]
     elec_eff_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Elec efficiency (MWh/tCO2)']]
     heat_eff_removal = data_dt['gm_costs_removal'][:, :, rem_cost_titles['Heat efficiency (MWh/tCO2)']]
 
@@ -114,8 +114,8 @@ def calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, mol_cost_titles,
                                                         eff_lr_combustion)
     
     # 5. Update cost matrix values
-    data['gm_costs_removal'][:, :, rem_cost_titles['Capex (GBP/tCO2)']] = capex_removal * learning_factor_capex_removal
-    data['gm_costs_removal'][:, :, rem_cost_titles['Opex (GBP/tCO2)']] = opex_removal * learning_factor_opex_removal
+    data['gm_costs_removal'][:, :, rem_cost_titles['Capex (GBP/tCO2/year)']] = capex_removal * learning_factor_capex_removal
+    data['gm_costs_removal'][:, :, rem_cost_titles['Opex (GBP/tCO2/year)']] = opex_removal * learning_factor_opex_removal
     data['gm_costs_removal'][:, :, rem_cost_titles['Elec efficiency (MWh/tCO2)']] = elec_eff_removal * learning_factor_eff_removal
     data['gm_costs_removal'][:, :, rem_cost_titles['Heat efficiency (MWh/tCO2)']] = heat_eff_removal * learning_factor_eff_removal
     
