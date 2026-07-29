@@ -39,13 +39,11 @@ def load_titles():
         classification = row[0]
         name_type = row[4]
         values = [v for v in row.iloc[5:] if v != '' and pd.notna(v)]
-
-        # Vectorised int conversion (faster than loop)
-        cleaned_vals = [int(v) if v.isdigit() else v for v in values]
+        cleaned_vals = tuple(int(v) if v.isdigit() else v for v in values)
 
         if name_type == 'Full name':
-            titles_dict[classification] = tuple(cleaned_vals)
+            titles_dict[classification] = cleaned_vals
         elif name_type == 'Short name':
-            titles_dict[f"{classification}_short"] = tuple(cleaned_vals)
+            titles_dict[f"{classification}_short"] = cleaned_vals
 
     return titles_dict

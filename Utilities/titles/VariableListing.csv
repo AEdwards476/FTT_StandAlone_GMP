@@ -409,3 +409,4 @@ gm_lcom_doc,Levelised cost of E-methane (DOC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP
 gm_lcom_doc_sd,Standard deviation of E-methane cost (DOC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_elec_price,Average electricity price,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_elec_price_sd,Standard deviation of electricity price,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_elec_price_curve,Ordered electricity price curve by hour,GBP/kWh,RTI,hours,NA,TIME,FTT-GMP,-,-,,Y
