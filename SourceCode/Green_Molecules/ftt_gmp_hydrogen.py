@@ -18,6 +18,7 @@ import numpy as np
 # local library imports
 
 HYDROGEN_OPTIMISATION_STEP_HOURS = 10
+NESO_PRICE_OPTION_INDEX = 1
 
 
 def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
@@ -76,6 +77,14 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     has_curve_data = price_curve.size > 0 and np.any(np.abs(price_curve) > 0)
 
     if has_curve_data:
+        # Align the curve level to the selected NESO annual average while
+        # preserving the intra-year hourly profile.
+        neso_av_prices = np.asarray(data['gm_NESO_av_electricity_price'][0, :, 0], dtype=float)
+        neso_target_price = float(neso_av_prices[NESO_PRICE_OPTION_INDEX])
+
+        curve_average = float(np.mean(price_curve))
+        price_curve = price_curve + (neso_target_price - curve_average)
+
         # Input curve is in price-per-MWh, but hydrogen cash-flow math is in kWh.
         price_curve = price_curve / 1000.0
         price_curve = np.sort(price_curve)
