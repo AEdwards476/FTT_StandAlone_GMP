@@ -390,6 +390,9 @@ gm_capacity,Installed capacity by pathway,GW,RTI,titles_gm_pathways,NA,TIME,FTT-
 gm_pathway_lcoe,Levelised cost of electricity by pathway,GBP/kWh,RTI,titles_gm_pathways,NA,TIME,FTT-GMP,-,-,,
 gm_pathway_lcoe_sd,LCOE standard deviation,GBP/kWh,RTI,titles_gm_pathways,NA,TIME,FTT-GMP,-,-,,
 gm_lcoh,Levelised cost of hydrogen,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_lcoh_capex_component,Hydrogen LCOH CAPEX component,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_lcoh_opex_component,Hydrogen LCOH OPEX component,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_lcoh_electricity_component,Hydrogen LCOH electricity component,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcoh_no_dr,Cost of hydrogen without discounting,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcoh_sd,Standard deviation of hydrogen cost,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_gbl_cap_molecules,Global cumulative molecule production capacity,Mt,NA,titles_molecules,NA,TIME,FTT-GMP,-,-,2001,Y
