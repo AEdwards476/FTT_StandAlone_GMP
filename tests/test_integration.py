@@ -2,7 +2,7 @@
 """
 Integration checks for FTT Stand-alone.
 
-Runs FTT-Tr, FTT-Fr, FTT-H, and FTT-P from 2010 to 2030 with noit=4
+Runs FTT-GMP from 2010 to 2030 with noit=4
 (instead of the standard 20).  The model is solved once per session and
 the result is shared across all three checks:
 
@@ -38,7 +38,7 @@ def model_run_results():
 
     Settings overridden for CI speed:
     * ``simulation_end`` → 2030
-    * ``enable_modules`` → FTT-Tr, FTT-P, FTT-H, FTT-Fr
+    * ``enable_modules`` → FTT-GMP
     * ``scenarios``      → S0
     * ``noit``           → 4  (instead of the standard 20)
 
@@ -57,7 +57,7 @@ def model_run_results():
             result = original_read(self, filenames, encoding=encoding)
             if "settings" in self:
                 self.set("settings", "simulation_end", "2030")
-                self.set("settings", "enable_modules", "FTT-Tr, FTT-P, FTT-H, FTT-Fr")
+                self.set("settings", "enable_modules", "FTT-GMP")
                 self.set("settings", "scenarios", "S0")
             return result
 
