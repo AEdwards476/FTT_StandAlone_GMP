@@ -17,11 +17,15 @@ import numpy as np
 
 # local library imports
 
-def get_methane_lc(data, year, mol_cost_titles, molecule_titles, 
-                   co2_type = "DAC"):
+def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
+                   rem_cost_titles, removal_titles):
     """
     Returns current year levelised costs of methane production in £/kwh.
     Modifies the input 'data' dictionary in-place.
+
+    CO2 is assumed to be provided by CO2 recycled from CCS, so the only CO2
+    cost is the transport and storage cost (GBP/tCO2) taken from the
+    gm_costs_removal matrix.
 
     Parameters
     -----------
@@ -33,8 +37,10 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
         Dictionary containing the indices for the molecule cost titles
     molecule_titles: dictionary
         Dictionary containing the indices for the molecule titles
-    co2_type: str
-        Type of CO2 source ("DAC" or "DOC" -- defaults to "DAC")
+    rem_cost_titles: dictionary
+        Dictionary containing the indices for the removal cost titles
+    removal_titles: dictionary
+        Dictionary containing the indices for the removal technology titles
 
     Returns
     ----------
@@ -43,6 +49,7 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     """
     
     molecule_costs = data['gm_costs_molecules'][0, :, :].copy()
+    removal_costs = data['gm_costs_removal'][0, :, :].copy()
     
     capacity_kw = 600        # Placeholder, assuming this is input kW
     capacity_factor = molecule_costs[molecule_titles['2 Synthetic methane'],
@@ -59,13 +66,12 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     h2_price = data['gm_lcoh'][0, 0, 0]                 # £/kWh
     h2_price_sd = data['gm_lcoh_sd'][0, 0, 0]  
     
-    co2_type = co2_type.upper()
-    if co2_type == "DOC":
-        co2_price = data['gm_lcodoc'][0, 0, 0]          # £/tCO2
-        co2_price_sd = data['gm_lcodoc_sd'][0, 0, 0]
-    else:
-        co2_price = data['gm_lcodac'][0, 0, 0]
-        co2_price_sd = data['gm_lcodac_sd'][0, 0, 0] 
+    # CO2 is provided by CO2 recycled from CCS: the only CO2 cost is the
+    # transport and storage cost in £/tCO2, taken from the removal cost matrix.
+    co2_price = removal_costs[removal_titles['1 DAC'],
+                              rem_cost_titles['Storage (GBP/tCO2)']]
+    co2_price_sd = removal_costs[removal_titles['1 DAC'],
+                                 rem_cost_titles['Storage SD']]
 
     # 1. Production Metrics
     # Total annual energy output of methane in kWh
@@ -149,12 +155,8 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     total_costs_sd = np.sqrt(npv_costs_variance)
     lcom_sd = total_costs_sd / npv_generation
 
-    # Save to data dictionary — variable depends on CO2 source used
-    if co2_type == "DOC":
-        data['gm_lcom_doc'][:, 0, 0] = lcom
-        data['gm_lcom_doc_sd'][:, 0, 0] = lcom_sd
-    else:
-        data['gm_lcom'][:, 0, 0] = lcom
-        data['gm_lcom_sd'][:, 0, 0] = lcom_sd
+    # Save to data dictionary
+    data['gm_lcom_ccs'][:, 0, 0] = lcom
+    data['gm_lcom_ccs_sd'][:, 0, 0] = lcom_sd
 
     return data

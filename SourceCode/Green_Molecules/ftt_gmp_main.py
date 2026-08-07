@@ -97,9 +97,7 @@ def solve(data, time_lag, titles, histend, year):
         # MOLECULE PRODUCTION
         data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
         data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
-                            co2_type = "DAC")
-        data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
-                            co2_type = "DOC")
+                            rem_cost_titles, removal_titles)
         # COMBUSTION
         data = get_lcoe(data, year, mol_cost_titles, molecule_titles,
                         comb_cost_titles, combustion_titles, pathway_titles,
@@ -114,6 +112,8 @@ def solve(data, time_lag, titles, histend, year):
         for t in range(1, no_it + 1):
             
             # Shares Equation here!
+            
+            print()
 
             # CO2 REMOVAL
             data = get_doc_lc(data, year, rem_cost_titles, removal_titles)
@@ -122,9 +122,7 @@ def solve(data, time_lag, titles, histend, year):
             # MOLECULE PRODUCTION
             data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
             data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
-                                co2_type = "DAC")
-            data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
-                                co2_type = "DOC")
+                                rem_cost_titles, removal_titles)
             
             # COMBUSTION
             data = get_lcoe(data, year, mol_cost_titles, molecule_titles,
@@ -132,8 +130,8 @@ def solve(data, time_lag, titles, histend, year):
                             rem_cost_titles, removal_titles)
             
             if year > histend['gm_costs_molecules']:
-                calc_lbd(data, data_dt, time_lag, year, rem_cost_titles, 
-                        mol_cost_titles, comb_cost_titles)
+                calc_lbd(data, data_dt, time_lag, year, rem_cost_titles,
+                    mol_cost_titles, comb_cost_titles)
             
             # Update data_dt for the next timestep
             for var in time_lag.keys():

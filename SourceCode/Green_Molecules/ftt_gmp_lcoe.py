@@ -151,31 +151,31 @@ def get_lcoe(data, year, mol_cost_titles, molecule_titles,
         annual_fuel_kwh = annual_elec_kwh / efficiency if efficiency > 0 else 0.0
 
         # Fuel cost and removal cost — handling differs for methane pathways.
-        # For methane: the removal interaction matrix encodes which CO2 source
-        # was used to produce the methane (DAC or DOC), so it selects the
-        # correct LCOM rather than charging a combustion-stage removal cost.
-        # For fossil gas / hydrogen: the matrix charges a combustion removal cost.
+        # For methane: the molecule feedstock is produced from CCS-recycled
+        # CO2, so the LCOM (which only includes the CO2 transport/storage cost)
+        # is used as the fuel price. DAC or DOC still removes the combustion
+        # leakage emissions.
+        # For fossil gas / hydrogen: standard fuel price, and DAC/DOC removes
+        # the combustion leakage emissions.
         m_vec = inter_mol[p_idx, :]
         r_vec = inter_rem[p_idx, :]
 
+        co2_per_kwh_tco2 = co2_g_per_kwh * 1e-6
+        removal_price    = float(np.dot(r_vec, removal_prices))
+        removal_price_sd = float(np.dot(r_vec, removal_prices_sd))
+
         if float(m_vec[ch4_idx]) > 0:
-            # Synthetic methane pathway: pick LCOM for the correct CO2 source
-            fuel_price = (float(r_vec[dac_idx]) * data['gm_lcom'][0, 0, 0] +
-                          float(r_vec[doc_idx]) * data['gm_lcom_doc'][0, 0, 0])
-            fuel_sd    = (float(r_vec[dac_idx]) * data['gm_lcom_sd'][0, 0, 0] +
-                          float(r_vec[doc_idx]) * data['gm_lcom_doc_sd'][0, 0, 0])
-            annual_removal_cost     = 0.0
-            annual_removal_variance = 0.0
+            # Synthetic methane pathway: fuel produced from CCS-recycled CO2
+            fuel_price = float(data['gm_lcom_ccs'][0, 0, 0])
+            fuel_sd    = float(data['gm_lcom_ccs_sd'][0, 0, 0])
         else:
-            # Fossil gas / hydrogen: standard fuel price + combustion removal cost
+            # Fossil gas / hydrogen: standard fuel price
             fuel_price = float(np.dot(m_vec, molecule_fuel_prices))
             fuel_sd    = float(np.dot(m_vec, molecule_fuel_sd))
-            co2_per_kwh_tco2 = co2_g_per_kwh * 1e-6
-            removal_price    = float(np.dot(r_vec, removal_prices))
-            removal_price_sd = float(np.dot(r_vec, removal_prices_sd))
-            annual_removal_cost     = annual_elec_kwh * co2_per_kwh_tco2 * removal_price
-            annual_removal_variance = (
-                annual_elec_kwh * co2_per_kwh_tco2 * removal_price_sd) ** 2
+
+        annual_removal_cost     = annual_elec_kwh * co2_per_kwh_tco2 * removal_price
+        annual_removal_variance = (
+            annual_elec_kwh * co2_per_kwh_tco2 * removal_price_sd) ** 2
 
             # Fossil gas pathways need extra DAC to offset upstream methane
             # emissions so both fossil-gas routes remain net zero.
