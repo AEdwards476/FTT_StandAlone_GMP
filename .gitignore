@@ -5,6 +5,7 @@ __pycache__/
 *$py.class
 *.pickle
 Output/Scenarios.json
+Output/monte_carlo
 settings.ini
 .DS_Store
 Inputs/S0/.DS_Store
