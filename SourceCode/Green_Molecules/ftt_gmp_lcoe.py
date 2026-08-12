@@ -18,7 +18,9 @@ import numpy as np
 
 # local library imports
 
-def get_lcoe(data, year, mol_cost_titles, molecule_titles,
+FOSSIL_GAS_PRICE_SD_FRACTION = 0.25
+
+def get_lcoe(data, year, molecule_titles,
              comb_cost_titles, combustion_titles, pathway_titles,
              rem_cost_titles, removal_titles):
     """
@@ -41,8 +43,6 @@ def get_lcoe(data, year, mol_cost_titles, molecule_titles,
         Model variables for given year of solution
     year: int
         Current year
-    mol_cost_titles: dictionary
-        Dictionary containing the indices for the molecule cost titles
     molecule_titles: dictionary
         Dictionary containing the indices for the molecule titles
     comb_cost_titles: dictionary
@@ -66,8 +66,6 @@ def get_lcoe(data, year, mol_cost_titles, molecule_titles,
     # Extract cost matrices
     # shape: (n_combustion_tech, n_comb_cost_titles)
     comb_costs = data['gm_costs_combustion'][0, :, :]
-    # shape: (n_molecule_tech, n_mol_cost_titles)
-    mol_costs = data['gm_costs_molecules'][0, :, :]
 
     # Extract interaction matrices (shape: (n_pathways, n_tech))
     inter_comb = data['gm_interaction_combustion'][0, :, :]
@@ -85,9 +83,9 @@ def get_lcoe(data, year, mol_cost_titles, molecule_titles,
 
     fg_idx = molecule_titles['1 Fossil gas']
     molecule_fuel_prices[fg_idx] = float(
-        mol_costs[fg_idx, mol_cost_titles['Fuel cost (GBP/kWh)']])
-    molecule_fuel_sd[fg_idx] = float(
-        mol_costs[fg_idx, mol_cost_titles['Fuel cost SD']])
+        data['gm_fossil_gas_price'][0, 0, 0])
+    molecule_fuel_sd[fg_idx] = (
+        molecule_fuel_prices[fg_idx] * FOSSIL_GAS_PRICE_SD_FRACTION)
 
     ch4_idx = molecule_titles['2 Synthetic methane']
     # Note: methane LCOM selection (DAC vs DOC) is handled per-pathway in the

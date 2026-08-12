@@ -15,6 +15,11 @@ Functions included:
 # global imports
 import numpy as np
 
+from SourceCode.Green_Molecules.ftt_gmp_prices import (
+    get_electricity_price,
+    get_electricity_price_sd,
+)
+
 # local library imports
 
 def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
@@ -60,8 +65,8 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
                                 mol_cost_titles['Energy content (kWh/t)']]
 
     # Electricity price in £/kWh
-    elec_price = data['gm_elec_price'][0, 0, 0]
-    elec_price_sd = data['gm_elec_price_sd'][0, 0, 0]
+    elec_price = get_electricity_price(data)
+    elec_price_sd = get_electricity_price_sd(data)
     
     h2_price = data['gm_lcoh'][0, 0, 0]                 # £/kWh
     h2_price_sd = data['gm_lcoh_sd'][0, 0, 0]  
