@@ -177,6 +177,20 @@ def get_lcoe(data, year, mol_cost_titles, molecule_titles,
         annual_removal_variance = (
             annual_elec_kwh * co2_per_kwh_tco2 * removal_price_sd) ** 2
 
+        # Fossil gas pathways need extra DAC/DOC to offset upstream CO2e emissions
+        # so both fossil-gas routes remain net zero.
+        if float(m_vec[fg_idx]) > 0:
+            upstream_intensity_gco2e_per_mj = float(data['gm_CO2_intensity_upstream'][0, 0, 0])
+            # Convert MJ-based intensity to kWh_fuel and use the actual fuel
+            # input, which already reflects the combustion efficiency loss.
+            extra_removal_tco2 = (
+                annual_fuel_kwh * 3.6 * upstream_intensity_gco2e_per_mj * 1e-6
+            )
+            annual_removal_cost += extra_removal_tco2 * removal_prices[dac_idx]
+            annual_removal_variance += (
+                extra_removal_tco2 * removal_prices_sd[dac_idx]
+            ) ** 2
+
         annual_fuel_cost     = annual_fuel_kwh * fuel_price
         annual_fuel_variance = (annual_fuel_kwh * fuel_sd) ** 2
 
