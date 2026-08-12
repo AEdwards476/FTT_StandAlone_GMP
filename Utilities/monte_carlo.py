@@ -9,10 +9,15 @@ Subcommands
 -----------
 generate
     Read a parameter spec CSV, sample N draws, write one scenario
-    folder per draw (Inputs/MC_001/FTT-GMP/...).
+    folder per draw (Inputs/<prefix>001/FTT-GMP/...). The base scenario
+    defaults to S0; use --base-scenario (e.g. nat_scale) to change a
+    scenario. Variables the base scenario does not override fall back to S0, 
+    matching the model loader.
 run
-    Set the scenarios in settings.ini from the existing MC_* folders, run the
-    model, and save the combined output to Output/Results.pickle.
+    Set the scenarios in settings.ini from the existing <prefix>* folders,
+    run the model, and save the combined output to Output/Results.pickle.
+    --base-scenario/--prefix accept comma-separated lists so that e.g. the
+    S0 and nat_scale Monte Carlo runs can be combined into one model run.
 split
     Split Output/Results.pickle into one pickle per scenario under
     Output/monte_carlo/. (might be helpful for plotting)
@@ -20,7 +25,9 @@ split
 Usage
 -----
 python Utilities/monte_carlo.py generate --n 100 --seed 42
+python Utilities/monte_carlo.py generate --n 100 --seed 42 --base-scenario nat_scale
 python Utilities/monte_carlo.py run
+python Utilities/monte_carlo.py run --base-scenario S0,nat_scale
 python Utilities/monte_carlo.py split
 """
 
@@ -40,12 +47,29 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SPEC = PROJECT_ROOT / "Inputs" / "_monte_carlo_params.csv"
 MODULE = "FTT-GMP"
-SCENARIO_PREFIX = "MC_"
 
 
-def scenario_name(i):
+def scenario_name(i, prefix):
     """Return the scenario name for draw index i (3 digits, zero-padded)."""
-    return f"{SCENARIO_PREFIX}{i:03d}"
+    return f"{prefix}{i:03d}"
+
+
+def parse_pairs(base_scenarios_arg, prefixes_arg):
+    """Return a list of (base_scenario, prefix) pairs from comma-separated args.
+
+    When ``--prefix`` is omitted, each prefix is derived from its base
+    scenario: ``MC_`` for S0, otherwise ``<base>_MC_``.
+    """
+    bases = [b.strip() for b in base_scenarios_arg.split(",") if b.strip()]
+    if prefixes_arg is None:
+        prefixes = ["MC_" if b == "S0" else f"{b}_MC_" for b in bases]
+    else:
+        prefixes = [p.strip() for p in prefixes_arg.split(",") if p.strip()]
+    if len(bases) != len(prefixes):
+        raise SystemExit(
+            "--base-scenario and --prefix must list the same number of entries"
+        )
+    return list(zip(bases, prefixes))
 
 
 def parse_args():
@@ -56,12 +80,22 @@ def parse_args():
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     gen = subparsers.add_parser("generate", help="Generate scenario folders")
-    gen.add_argument("--n", type=int, required=True, help="Number of Monte Carlo draws")
+    gen.add_argument("--n", type=int, default=100, help="Number of Monte Carlo draws (default: 100)")
     gen.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
     gen.add_argument("--spec", type=str, default=str(DEFAULT_SPEC), help="Path to parameter spec CSV")
+    gen.add_argument("--base-scenario", type=str, default="S0",
+                     help="Base scenario folder to perturb (default: S0)")
+    gen.add_argument("--prefix", type=str, default=None,
+                     help="Scenario name prefix (default: derived from "
+                          "--base-scenario: MC_ for S0, else <base>_MC_)")
 
     run = subparsers.add_parser("run", help="Set scenarios in settings.ini, run the model, and save Output/Results.pickle")
     run.add_argument("--results", type=str, default="Output/Results.pickle", help="Output pickle path")
+    run.add_argument("--base-scenario", type=str, default="S0",
+                     help="Comma-separated base scenario names (default: S0)")
+    run.add_argument("--prefix", type=str, default=None,
+                     help="Comma-separated scenario prefixes (default: derived "
+                          "per base scenario: MC_ for S0, else <base>_MC_)")
 
     split = subparsers.add_parser("split", help="Split a results pickle into per-scenario pickles")
     split.add_argument("--results", type=str, default="Output/Results.pickle", help="Input pickle path")
@@ -80,8 +114,24 @@ def is_time_series_frame(frame):
     return str(frame.columns[0]).strip().casefold() == "rti"
 
 
-def read_base_frame(variable_file, s0_dir):
-    """Read the S0 cost matrix CSV and return the DataFrame.
+def resolve_base_dir(variable_file, base_dir, s0_dir):
+    """Return the directory holding the base frame for a variable.
+
+    Prefer the base scenario's folder; fall back to S0. This mirrors the
+    model loader, which copies S0 values and overlays scenario-specific
+    files, so a scenario such as ``nat_scale`` that only overrides some
+    variables still gets its non-overridden variables from S0.
+    """
+    name = variable_file
+    if name.lower().endswith(".csv"):
+        name = name[:-4]
+    if (base_dir / f"{name}.csv").is_file():
+        return base_dir
+    return s0_dir
+
+
+def read_base_frame(variable_file, base_dir):
+    """Read the base cost matrix CSV and return the DataFrame.
 
     Accepts either the bare variable name (e.g. ``gm_costs_removal``) or the
     filename (``gm_costs_removal.csv``).
@@ -89,9 +139,9 @@ def read_base_frame(variable_file, s0_dir):
     name = variable_file
     if name.lower().endswith(".csv"):
         name = name[:-4]
-    path = s0_dir / f"{name}.csv"
+    path = base_dir / f"{name}.csv"
     if not path.is_file():
-        raise ValueError(f"Variable file not found in S0: {variable_file}")
+        raise ValueError(f"Variable file not found in {base_dir.name} or S0: {variable_file}")
     frame = pd.read_csv(path)
     if frame.columns[0].startswith("Unnamed"):
         frame.rename(columns={frame.columns[0]: ""}, inplace=True)
@@ -123,7 +173,7 @@ def find_column(df, cost_column):
     return fold.get(cost_column.strip().casefold())
 
 
-def validate_spec(spec, s0_dir):
+def validate_spec(spec, s0_dir, base_dir):
     """Validate the spec and return a list of parameter dicts."""
     required = ["variable_file", "technology", "cost_column", "mode", "lower", "upper"]
     for column in required:
@@ -159,7 +209,8 @@ def validate_spec(spec, s0_dir):
 
         if variable_file not in base_frames:
             try:
-                base_frames[variable_file] = read_base_frame(variable_file, s0_dir)
+                resolved_dir = resolve_base_dir(variable_file, base_dir, s0_dir)
+                base_frames[variable_file] = read_base_frame(variable_file, resolved_dir)
             except ValueError as exc:
                 errors.append(f"Row {row_index}: {exc}")
                 continue
@@ -237,9 +288,9 @@ def sample_draws(rng, n, params):
     return draws
 
 
-def write_scenario_folder(scenario, params, draws, draw_index, base_frames, s0_dir):
+def write_scenario_folder(scenario, params, draws, draw_index, base_frames):
     """Write the FTT-GMP cost matrix files for one scenario folder."""
-    scenario_dir = s0_dir.parent.parent / scenario / MODULE
+    scenario_dir = PROJECT_ROOT / "Inputs" / scenario / MODULE
     scenario_dir.mkdir(parents=True, exist_ok=True)
 
     for variable_file in base_frames:
@@ -259,11 +310,10 @@ def write_scenario_folder(scenario, params, draws, draw_index, base_frames, s0_d
         frame.to_csv(scenario_dir / variable_file, index=False)
 
 
-def update_settings(n, settings_path):
+def update_settings(scenarios, settings_path):
     """Set the scenarios entry in settings.ini."""
     config = configparser.ConfigParser()
     config.read(str(settings_path))
-    scenarios = ["S0"] + [scenario_name(i) for i in range(1, n + 1)]
     config.set("settings", "scenarios", ", ".join(scenarios))
     with open(settings_path, "w") as configfile:
         config.write(configfile)
@@ -279,12 +329,19 @@ def cmd_generate(args):
     if n < 1:
         raise SystemExit("Number of draws must be >= 1")
 
+    prefix = args.prefix
+    if prefix is None:
+        prefix = "MC_" if args.base_scenario == "S0" else f"{args.base_scenario}_MC_"
     s0_dir = PROJECT_ROOT / "Inputs" / "S0" / MODULE
+    base_dir = PROJECT_ROOT / "Inputs" / args.base_scenario / MODULE
+    if not base_dir.is_dir():
+        raise SystemExit(f"Base scenario folder not found: {base_dir}")
+
     spec = pd.read_csv(spec_path)
-    params, base_frames = validate_spec(spec, s0_dir)
+    params, base_frames = validate_spec(spec, s0_dir, base_dir)
 
     inputs_root = PROJECT_ROOT / "Inputs"
-    existing = sorted(inputs_root.glob(f"{SCENARIO_PREFIX}*"))
+    existing = sorted(inputs_root.glob(f"{prefix}*"))
     for folder in existing:
         shutil.rmtree(folder)
         print(f"Removed {folder}")
@@ -294,8 +351,8 @@ def cmd_generate(args):
 
     draw_records = []
     for draw_index in range(n):
-        scenario = scenario_name(draw_index + 1)
-        write_scenario_folder(scenario, params, draws, draw_index, base_frames, s0_dir)
+        scenario = scenario_name(draw_index + 1, prefix)
+        write_scenario_folder(scenario, params, draws, draw_index, base_frames)
         for param_index, param in enumerate(params):
             draw_records.append({
                 "scenario": scenario,
@@ -310,18 +367,31 @@ def cmd_generate(args):
 
     out_dir = PROJECT_ROOT / "Output" / "monte_carlo"
     out_dir.mkdir(parents=True, exist_ok=True)
-    draws_path = out_dir / "draws.csv"
+    draws_path = out_dir / f"draws_{prefix.rstrip('_')}.csv"
     pd.DataFrame(draw_records).to_csv(draws_path, index=False)
     print(f"Draw log written to {draws_path}")
 
 
 def cmd_run(args):
     """Set the scenarios in settings.ini, run the model, and save the combined output pickle."""
+    pairs = parse_pairs(args.base_scenario, args.prefix)
+
     inputs_root = PROJECT_ROOT / "Inputs"
-    mc_folders = sorted(inputs_root.glob(f"{SCENARIO_PREFIX}*"))
-    if not mc_folders:
-        print("Warning: no MC_* scenario folders found in Inputs; running S0 only.")
-    update_settings(len(mc_folders), PROJECT_ROOT / "settings.ini")
+    scenarios = []
+    for base_scenario, prefix in pairs:
+        folders = sorted(inputs_root.glob(f"{prefix}*"))
+        if not folders:
+            print(f"Warning: no {prefix}* scenario folders found in Inputs; "
+                  f"skipping base scenario '{base_scenario}'.")
+            continue
+        scenarios.append(base_scenario)
+        for i in range(1, len(folders) + 1):
+            scenarios.append(scenario_name(i, prefix))
+
+    if not scenarios:
+        print("Warning: no MC scenario folders found in Inputs; running S0 only.")
+        scenarios = ["S0"]
+    update_settings(scenarios, PROJECT_ROOT / "settings.ini")
 
     sys.path.insert(0, str(PROJECT_ROOT))
     from SourceCode.model_class import RunFTT
