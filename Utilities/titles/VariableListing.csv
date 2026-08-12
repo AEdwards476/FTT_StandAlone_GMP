@@ -412,8 +412,7 @@ gm_lcom_doc,Levelised cost of E-methane (DOC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP
 gm_lcom_doc_sd,Standard deviation of E-methane cost (DOC CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcom_ccs,Levelised cost of E-methane (CCS-recycled CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcom_ccs_sd,Standard deviation of E-methane cost (CCS-recycled CO2),GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
-gm_elec_price,Average electricity price,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
-gm_elec_price_sd,Standard deviation of electricity price,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
+gm_elec_price_backup,Backup average electricity price,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_CO2_intensity_upstream,Weighted emission intensity based on gas mix UK,gCO2eq per MJ,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_elec_price_curve,Ordered electricity price curve by hour,GBP/kWh,RTI,hours,NA,TIME,FTT-GMP,-,-,,Y
 gm_NESO_av_electricity_price,NESO expected annual average electricity price options,GBP/MWh,RTI,titles_gm_neso_price_options,NA,TIME,FTT-GMP,-,-,2001,Y

@@ -15,6 +15,11 @@ Functions included:
 # global imports
 import numpy as np
 
+from SourceCode.Green_Molecules.ftt_gmp_prices import (
+    get_electricity_price,
+    get_electricity_price_sd,
+)
+
 # local library imports
 
 def get_doc_lc(data, year, rem_cost_titles, removal_titles):
@@ -49,8 +54,8 @@ def get_doc_lc(data, year, rem_cost_titles, removal_titles):
                                  rem_cost_titles['Elec efficiency (MWh/tCO2)']]
     
     # Electricity price in £/kWh
-    elec_price = data['gm_elec_price'][0, 0, 0]
-    elec_price_sd = data['gm_elec_price_sd'][0, 0, 0]
+    elec_price = get_electricity_price(data)
+    elec_price_sd = get_electricity_price_sd(data)
     
     # 1. Production and Resource Inputs
     # Annual drawdown (tCO2/year)
