@@ -1,0 +1,35 @@
+variable_file,technology,cost_column,mode,lower,upper
+gm_NESO_av_electricity_price,2 Average (Baseline Low & High),ALL,factor,-0.2,0.2
+gm_costs_combustion,1 Conventional,Capex (GBP/kW),factor,-0.2,0.2
+gm_costs_combustion,2 CCS retrofit,Capex (GBP/kW),factor,-0.2,0.2
+gm_costs_combustion,3 H2 ready,Capex (GBP/kW),factor,-0.2,0.2
+gm_costs_combustion,4 H2 retrofit,Capex (GBP/kW),factor,-0.2,0.2
+gm_costs_combustion,1 Conventional,Opex (GBP/kW),factor,-0.2,0.2
+gm_costs_combustion,2 CCS retrofit,Opex (GBP/kW),factor,-0.2,0.2
+gm_costs_combustion,3 H2 ready,Opex (GBP/kW),factor,-0.2,0.2
+gm_costs_combustion,4 H2 retrofit,Opex (GBP/kW),factor,-0.2,0.2
+gm_costs_molecules,2 Synthetic methane,Capex (GBP/kW),factor,-0.2,0.2
+gm_costs_molecules,3 Hydrogen BOP,Capex (GBP/kW),factor,-0.2,0.2
+gm_costs_molecules,4 Hydrogen stack,Capex (GBP/kW),factor,-0.2,0.2
+gm_costs_molecules,2 Synthetic methane,Opex (GBP/kW),factor,-0.2,0.2
+gm_costs_molecules,3 Hydrogen BOP,Opex (GBP/kW),factor,-0.2,0.2
+gm_costs_molecules,2 Synthetic methane,Capex learning exp,factor,-0.2,0.2
+gm_costs_molecules,3 Hydrogen BOP,Capex learning exp,factor,-0.2,0.2
+gm_costs_molecules,4 Hydrogen stack,Capex learning exp,factor,-0.2,0.2
+gm_costs_molecules,2 Synthetic methane,Efficiency learning exp,factor,-0.2,0.2
+gm_costs_molecules,3 Hydrogen BOP,Efficiency learning exp,factor,-0.2,0.2
+gm_costs_removal,1 DAC,Capex (GBP/tCO2/year),factor,-0.2,0.2
+gm_costs_removal,2 DOC,Capex (GBP/tCO2/year),factor,-0.2,0.2
+gm_costs_removal,1 DAC,Opex (GBP/tCO2/year),factor,-0.2,0.2
+gm_costs_removal,2 DOC,Opex (GBP/tCO2/year),factor,-0.2,0.2
+gm_costs_removal,1 DAC,Storage (GBP/tCO2),factor,-0.2,0.2
+gm_costs_removal,2 DOC,Storage (GBP/tCO2),factor,-0.2,0.2
+gm_costs_removal,1 DAC,Elec efficiency (MWh/tCO2),factor,-0.2,0.2
+gm_costs_removal,2 DOC,Elec efficiency (MWh/tCO2),factor,-0.2,0.2
+gm_costs_removal,1 DAC,Heat efficiency (MWh/tCO2),factor,-0.2,0.2
+gm_costs_removal,1 DAC,Capex learning exp,factor,-0.2,0.2
+gm_costs_removal,2 DOC,Capex learning exp,factor,-0.2,0.2
+gm_costs_removal,1 DAC,Opex learning exp,factor,-0.2,0.2
+gm_costs_removal,2 DOC,Opex learning exp,factor,-0.2,0.2
+gm_costs_removal,1 DAC,Efficiency learning exp,factor,-0.2,0.2
+gm_costs_removal,2 DOC,Efficiency learning exp,factor,-0.2,0.2
