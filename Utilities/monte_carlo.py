@@ -12,7 +12,10 @@ generate
     folder per draw (Inputs/<prefix>001/FTT-GMP/...). The base scenario
     defaults to S0; use --base-scenario (e.g. nat_scale) to change a
     scenario. Variables the base scenario does not override fall back to S0, 
-    matching the model loader.
+    matching the model loader. --base-scenario/--prefix accept comma-separated
+    lists so that e.g. the S0 and nat_scale Monte Carlo folders can be
+    generated in one command; each base scenario gets its own prefix and
+    draw log.
 run
     Set the scenarios in settings.ini from the existing <prefix>* folders,
     run the model, and save the combined output to Output/Results.pickle.
@@ -26,6 +29,7 @@ Usage
 -----
 python Utilities/monte_carlo.py generate --n 100 --seed 42
 python Utilities/monte_carlo.py generate --n 100 --seed 42 --base-scenario nat_scale
+python Utilities/monte_carlo.py generate --n 100 --seed 42 --base-scenario S0,nat_scale
 python Utilities/monte_carlo.py run
 python Utilities/monte_carlo.py run --base-scenario S0,nat_scale
 python Utilities/monte_carlo.py split
@@ -84,10 +88,10 @@ def parse_args():
     gen.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
     gen.add_argument("--spec", type=str, default=str(DEFAULT_SPEC), help="Path to parameter spec CSV")
     gen.add_argument("--base-scenario", type=str, default="S0",
-                     help="Base scenario folder to perturb (default: S0)")
+                     help="Comma-separated base scenario folders to perturb (default: S0)")
     gen.add_argument("--prefix", type=str, default=None,
-                     help="Scenario name prefix (default: derived from "
-                          "--base-scenario: MC_ for S0, else <base>_MC_)")
+                     help="Comma-separated scenario prefixes (default: derived per "
+                          "base scenario: MC_ for S0, else <base>_MC_)")
 
     run = subparsers.add_parser("run", help="Set scenarios in settings.ini, run the model, and save Output/Results.pickle")
     run.add_argument("--results", type=str, default="Output/Results.pickle", help="Output pickle path")
@@ -329,47 +333,48 @@ def cmd_generate(args):
     if n < 1:
         raise SystemExit("Number of draws must be >= 1")
 
-    prefix = args.prefix
-    if prefix is None:
-        prefix = "MC_" if args.base_scenario == "S0" else f"{args.base_scenario}_MC_"
-    s0_dir = PROJECT_ROOT / "Inputs" / "S0" / MODULE
-    base_dir = PROJECT_ROOT / "Inputs" / args.base_scenario / MODULE
-    if not base_dir.is_dir():
-        raise SystemExit(f"Base scenario folder not found: {base_dir}")
+    pairs = parse_pairs(args.base_scenario, args.prefix)
 
     spec = pd.read_csv(spec_path)
-    params, base_frames = validate_spec(spec, s0_dir, base_dir)
-
     inputs_root = PROJECT_ROOT / "Inputs"
-    existing = sorted(inputs_root.glob(f"{prefix}*"))
-    for folder in existing:
-        shutil.rmtree(folder)
-        print(f"Removed {folder}")
-
+    s0_dir = inputs_root / "S0" / MODULE
     rng = np.random.default_rng(args.seed)
-    draws = sample_draws(rng, n, params)
 
-    draw_records = []
-    for draw_index in range(n):
-        scenario = scenario_name(draw_index + 1, prefix)
-        write_scenario_folder(scenario, params, draws, draw_index, base_frames)
-        for param_index, param in enumerate(params):
-            draw_records.append({
-                "scenario": scenario,
-                "variable_file": param["variable_file"],
-                "technology": param["technology"],
-                "cost_column": param["cost_column"],
-                "mode": param["mode"],
-                "base_value": param["base_value"],
-                "drawn_value": draws[param_index][draw_index],
-            })
-        print(f"Generated {scenario}")
+    for base_scenario, prefix in pairs:
+        base_dir = inputs_root / base_scenario / MODULE
+        if not base_dir.is_dir():
+            raise SystemExit(f"Base scenario folder not found: {base_dir}")
 
-    out_dir = PROJECT_ROOT / "Output" / "monte_carlo"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    draws_path = out_dir / f"draws_{prefix.rstrip('_')}.csv"
-    pd.DataFrame(draw_records).to_csv(draws_path, index=False)
-    print(f"Draw log written to {draws_path}")
+        params, base_frames = validate_spec(spec, s0_dir, base_dir)
+
+        existing = sorted(inputs_root.glob(f"{prefix}*"))
+        for folder in existing:
+            shutil.rmtree(folder)
+            print(f"Removed {folder}")
+
+        draws = sample_draws(rng, n, params)
+
+        draw_records = []
+        for draw_index in range(n):
+            scenario = scenario_name(draw_index + 1, prefix)
+            write_scenario_folder(scenario, params, draws, draw_index, base_frames)
+            for param_index, param in enumerate(params):
+                draw_records.append({
+                    "scenario": scenario,
+                    "variable_file": param["variable_file"],
+                    "technology": param["technology"],
+                    "cost_column": param["cost_column"],
+                    "mode": param["mode"],
+                    "base_value": param["base_value"],
+                    "drawn_value": draws[param_index][draw_index],
+                })
+            print(f"Generated {scenario}")
+
+        out_dir = PROJECT_ROOT / "Output" / "monte_carlo"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        draws_path = out_dir / f"draws_{prefix.rstrip('_')}.csv"
+        pd.DataFrame(draw_records).to_csv(draws_path, index=False)
+        print(f"Draw log written to {draws_path}")
 
 
 def cmd_run(args):
