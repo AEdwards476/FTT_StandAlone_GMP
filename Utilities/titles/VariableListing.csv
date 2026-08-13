@@ -396,7 +396,7 @@ gm_lcoh_electricity_component,Hydrogen LCOH electricity component,GBP/kWh,RTI,NA
 gm_lcoh_no_dr,Cost of hydrogen without discounting,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcoh_sd,Standard deviation of hydrogen cost,GBP/kWh,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_gbl_cap_molecules,Global cumulative molecule production capacity,Mt,NA,titles_molecules,NA,TIME,FTT-GMP,-,-,2001,Y
-gm_gbl_cap_combustion,Global cumulative combustion capacity,GW,NA,titles_combustion,NA,TIME,FTT-GMP,-,-,2001,Y
+gm_gbl_cap_combustion,Global cumulative combustion capacity,MtCO2 or MtH2eq.,NA,titles_combustion,NA,TIME,FTT-GMP,-,-,2001,Y
 gm_gbl_cap_removal,Global cumulative CO2 removal capacity,MtCO2,NA,titles_removal,NA,TIME,FTT-GMP,-,-,2001,Y
 gm_lcodoc,Levelised cost of DOC,GBP/tCO2,RTI,NA,NA,TIME,FTT-GMP,-,-,,
 gm_lcodoc_no_dr,Cost of DOC without discounting,GBP/tCO2,RTI,NA,NA,TIME,FTT-GMP,-,-,,
