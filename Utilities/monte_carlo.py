@@ -118,6 +118,30 @@ def is_time_series_frame(frame):
     return str(frame.columns[0]).strip().casefold() == "rti"
 
 
+def time_series_columns(frame):
+    """Return (label_col, value_cols) for a wide time-series frame.
+
+    Two layouts exist for variables whose first column is 'RTI':
+
+      - Layout A (e.g. ``gm_NESO_av_electricity_price.csv``): the file has a
+        second coordinate column holding the labels, and the year columns
+        start at the third column: ``RTI, <label>, <year>, ...``.
+      - Layout B (e.g. ``gm_CO2_intensity_upstream.csv``): the RTI column
+        itself holds the labels and the year columns start at the second
+        column: ``RTI, <year>, ...``.
+
+    Layout B is detected when the second column header is a year (numeric),
+    matching how the model loader derives coordinate columns from the
+    VariableListing dimensions.
+    """
+    columns = list(frame.columns)
+    if len(columns) < 2:
+        return columns[0], []
+    if str(columns[1]).strip().lstrip("-").isdigit():
+        return columns[0], columns[1:]
+    return columns[1], columns[2:]
+
+
 def resolve_base_dir(variable_file, base_dir, s0_dir):
     """Return the directory holding the base frame for a variable.
 
@@ -149,7 +173,10 @@ def read_base_frame(variable_file, base_dir):
     frame = pd.read_csv(path)
     if frame.columns[0].startswith("Unnamed"):
         frame.rename(columns={frame.columns[0]: ""}, inplace=True)
-    value_columns = list(frame.columns[2:]) if is_time_series_frame(frame) else list(frame.columns[1:])
+    if is_time_series_frame(frame):
+        _, value_columns = time_series_columns(frame)
+    else:
+        value_columns = list(frame.columns[1:])
     frame[value_columns] = frame[value_columns].astype(float)
     return frame
 
@@ -221,7 +248,10 @@ def validate_spec(spec, s0_dir, base_dir):
 
         frame = base_frames[variable_file]
         is_ts = is_time_series_frame(frame)
-        label_col = frame.columns[1] if is_ts else None
+        if is_ts:
+            label_col, value_cols = time_series_columns(frame)
+        else:
+            label_col, value_cols = None, None
         row_idx = find_row_index(frame, technology, label_col=label_col)
         if row_idx is None:
             errors.append(
@@ -240,7 +270,6 @@ def validate_spec(spec, s0_dir, base_dir):
                 continue
 
         if is_ts:
-            value_cols = list(frame.columns[2:])
             base_value = float(frame.loc[row_idx, value_cols].mean())
         else:
             value_cols = None
