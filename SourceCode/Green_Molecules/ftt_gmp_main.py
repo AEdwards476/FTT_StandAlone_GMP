@@ -96,8 +96,7 @@ def solve(data, time_lag, titles, histend, year):
         data = get_dac_lc(data, year, rem_cost_titles, removal_titles)
         # MOLECULE PRODUCTION
         data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
-        data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
-                            rem_cost_titles, removal_titles)
+        data = get_methane_lc(data, year, mol_cost_titles, molecule_titles)
         # COMBUSTION
         data = get_lcoe(data, year, molecule_titles,
                         comb_cost_titles, combustion_titles, pathway_titles,
@@ -121,8 +120,7 @@ def solve(data, time_lag, titles, histend, year):
             
             # MOLECULE PRODUCTION
             data = get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles)
-            data = get_methane_lc(data, year, mol_cost_titles, molecule_titles,
-                                rem_cost_titles, removal_titles)
+            data = get_methane_lc(data, year, mol_cost_titles, molecule_titles)
             
             # COMBUSTION
             data = get_lcoe(data, year, molecule_titles,

@@ -37,6 +37,9 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     - Hydrogen energy content and process efficiency are on an LHV basis.
     - Molecule CAPEX/OPEX fields are in GBP/kW and GBP/(kW.year),
       converted to absolute GBP using installed capacity (kW).
+    - Levelised transport and storage costs are read from the
+      molecule cost matrix in GBP/kg and converted to GBP/kWh using the
+      hydrogen energy content, then added directly to the levelised output.
     - Stack lead time is intentionally treated as zero (fast replacement).
 
     Parameters
@@ -74,6 +77,8 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     cap_factor_idx = mol_cost_titles['Capacity factor']
     eff_idx = mol_cost_titles['Efficiency (MWh/t)']
     energy_idx = mol_cost_titles['Energy content (kWh/t)']
+    transport_idx = mol_cost_titles['Transport (GBP/kg)']
+    storage_idx = mol_cost_titles['Storage (GBP/kg)']
 
     default_capacity_factor = float(molecule_costs[bop_idx, cap_factor_idx])
 
@@ -251,20 +256,38 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
         costs_no_dr += lifetime_year_costs
         generation_no_dr += annual_h2_output_kwh
 
+    # 4b. Transport and storage costs. Levelised costs are read from
+    # the molecule cost matrix in GBP/kg and converted to GBP/kWh using the
+    # hydrogen energy content (LHV). These are per-kWh adders to the levelised
+    # output, so they are not run through the NPV cash-flow loop above.
+    tns_per_kg = (molecule_costs[bop_idx, transport_idx] +
+                  molecule_costs[bop_idx, storage_idx])
+    kwh_per_kg = kwh_per_t_h2 / 1000.0
+    tns_per_kwh = tns_per_kg / kwh_per_kg if kwh_per_kg > 0 else 0.0
+
+    npv_generation_delivered = npv_generation
+    generation_no_dr_delivered = generation_no_dr
+
     # 5. LCOH Calculation & Assignment
-    lcoh = npv_costs / npv_generation
-    lcoh_capex_component = npv_capex_costs / npv_generation
-    lcoh_capex_bop_component = npv_capex_bop_costs / npv_generation
+    lcoh = npv_costs / npv_generation_delivered + tns_per_kwh
+    lcoh_capex_component = npv_capex_costs / npv_generation_delivered
+    lcoh_capex_bop_component = npv_capex_bop_costs / npv_generation_delivered
     lcoh_capex_stack_component = (
         (npv_capex_stack_upfront_costs + npv_capex_stack_replacement_costs) /
-        npv_generation
+        npv_generation_delivered
     )
-    lcoh_opex_component = npv_opex_costs / npv_generation
-    lcoh_electricity_component = npv_electricity_costs / npv_generation
+    lcoh_opex_component = npv_opex_costs / npv_generation_delivered
+    lcoh_electricity_component = npv_electricity_costs / npv_generation_delivered
+    lcoh_storage_component = tns_per_kwh
     efficiency_pct = 100.0 * (kwh_per_t_h2 / 1000.0) / mwh_per_t
-    lcoh_no_dr = costs_no_dr / generation_no_dr
+    lcoh_no_dr = costs_no_dr / generation_no_dr_delivered + tns_per_kwh
     total_costs_sd = np.sqrt(npv_costs_variance)
-    lcoh_sd = total_costs_sd / npv_generation
+    lcoh_sd = total_costs_sd / npv_generation_delivered
+
+    # Production hydrogen cost: production costs only, excluding transport
+    # and storage -- for use in the methane pathways.
+    lcoh_production = npv_costs / npv_generation
+    lcoh_production_sd = np.sqrt(npv_costs_variance) / npv_generation
     
     if not hasattr(get_hydrogen_lc, "_diag_logged_years"):
         get_hydrogen_lc._diag_logged_years = set()
@@ -279,7 +302,8 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
             f"capex_bop={lcoh_capex_bop_component:7.3f}  "
             f"capex_stk={lcoh_capex_stack_component:7.3f}  "
             f"opex={lcoh_opex_component:7.3f}  "
-            f"elec={lcoh_electricity_component:7.3f}"
+            f"elec={lcoh_electricity_component:7.3f}  "
+            f"stor={lcoh_storage_component:7.3f}"
         )
         get_hydrogen_lc._diag_logged_years.add(year)
 
@@ -287,6 +311,9 @@ def get_hydrogen_lc(data, year, mol_cost_titles, molecule_titles):
     data['gm_lcoh_capex_component'][:, 0, 0] = lcoh_capex_component
     data['gm_lcoh_opex_component'][:, 0, 0] = lcoh_opex_component
     data['gm_lcoh_electricity_component'][:, 0, 0] = lcoh_electricity_component
+    data['gm_lcoh_storage_component'][:, 0, 0] = lcoh_storage_component
+    data['gm_lcoh_production'][:, 0, 0] = lcoh_production
+    data['gm_lcoh_production_sd'][:, 0, 0] = lcoh_production_sd
     data['gm_lcoh_no_dr'][:, 0, 0] = lcoh_no_dr
     data['gm_lcoh_sd'][:, 0, 0] = lcoh_sd
 

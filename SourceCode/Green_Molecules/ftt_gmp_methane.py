@@ -22,15 +22,14 @@ from SourceCode.Green_Molecules.ftt_gmp_prices import (
 
 # local library imports
 
-def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
-                   rem_cost_titles, removal_titles):
+def get_methane_lc(data, year, mol_cost_titles, molecule_titles):
     """
     Returns current year levelised costs of methane production in £/kwh.
     Modifies the input 'data' dictionary in-place.
 
     CO2 is assumed to be provided by CO2 recycled from CCS, so the only CO2
-    cost is the transport and storage cost (GBP/tCO2) taken from the
-    gm_costs_removal matrix.
+    cost is the transport and storage cost, taken from the molecule cost
+    matrix (storage column, in GBP/kg of CO2).
 
     Parameters
     -----------
@@ -42,10 +41,6 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
         Dictionary containing the indices for the molecule cost titles
     molecule_titles: dictionary
         Dictionary containing the indices for the molecule titles
-    rem_cost_titles: dictionary
-        Dictionary containing the indices for the removal cost titles
-    removal_titles: dictionary
-        Dictionary containing the indices for the removal technology titles
 
     Returns
     ----------
@@ -54,7 +49,6 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     """
     
     molecule_costs = data['gm_costs_molecules'][0, :, :].copy()
-    removal_costs = data['gm_costs_removal'][0, :, :].copy()
     
     capacity_kw = 600        # Placeholder, assuming this is input kW
     capacity_factor = molecule_costs[molecule_titles['2 Synthetic methane'],
@@ -68,15 +62,19 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     elec_price = get_electricity_price(data)
     elec_price_sd = get_electricity_price_sd(data)
     
-    h2_price = data['gm_lcoh'][0, 0, 0]                 # £/kWh
-    h2_price_sd = data['gm_lcoh_sd'][0, 0, 0]  
+    h2_price = data['gm_lcoh_production'][0, 0, 0]  # £/kWh, (no storage incl)
+    h2_price_sd = data['gm_lcoh_production_sd'][0, 0, 0]
     
-    # CO2 is provided by CO2 recycled from CCS: the only CO2 cost is the
-    # transport and storage cost in £/tCO2, taken from the removal cost matrix.
-    co2_price = removal_costs[removal_titles['1 DAC'],
-                              rem_cost_titles['Storage (GBP/tCO2)']]
-    co2_price_sd = removal_costs[removal_titles['1 DAC'],
-                                 rem_cost_titles['Storage SD']]
+    # CO2 is provided by CO2 recycled from CCS
+    # transport and storage costs taken from the molecule cost matrix in
+    # GBP/kg of CO2 and converted to GBP/tCO2.
+    # Note, for now, these T&S costs are combined and stored in storage col
+    tns_per_kg = (molecule_costs[molecule_titles['2 Synthetic methane'],
+                                 mol_cost_titles['Transport (GBP/kg)']] +
+                  molecule_costs[molecule_titles['2 Synthetic methane'],
+                                 mol_cost_titles['Storage (GBP/kg)']])
+    ts_cost = tns_per_kg * 1000.0  # £/tCO2
+    ts_cost_sd = 0.0
 
     # 1. Production Metrics
     # Total annual energy output of methane in kWh
@@ -114,12 +112,12 @@ def get_methane_lc(data, year, mol_cost_titles, molecule_titles,
     
     # 4. Feedstock Annual Costs and Variances
     annual_h2_cost_gbp = annual_h2_needed_kwh * h2_price
-    annual_co2_cost_gbp = annual_co2_needed_tonnes * co2_price
+    annual_co2_cost_gbp = annual_co2_needed_tonnes * ts_cost
     annual_elec_cost_gbp = annual_elec_input_kwh * elec_price
     
     # Variance
     annual_h2_variance = (annual_h2_needed_kwh * h2_price_sd) ** 2
-    annual_co2_variance = (annual_co2_needed_tonnes * co2_price_sd) ** 2
+    annual_co2_variance = (annual_co2_needed_tonnes * ts_cost_sd) ** 2
     annual_elec_variance = (annual_elec_input_kwh * elec_price_sd) ** 2
 
     # 5. Initialize Cash Flows
