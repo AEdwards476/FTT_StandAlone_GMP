@@ -1,5 +1,6 @@
 variable_file,technology,cost_column,mode,lower,upper
 gm_NESO_av_electricity_price,2 Average (Baseline Low & High),ALL,factor,-0.2,0.2
+gm_CO2_intensity_upstream,1 UK,ALL,factor,-0.2,0.2
 gm_costs_combustion,1 Conventional,Capex (GBP/kW),factor,-0.2,0.2
 gm_costs_combustion,2 CCS retrofit,Capex (GBP/kW),factor,-0.2,0.2
 gm_costs_combustion,3 H2 ready,Capex (GBP/kW),factor,-0.2,0.2
