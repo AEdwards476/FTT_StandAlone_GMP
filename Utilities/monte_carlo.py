@@ -51,6 +51,7 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SPEC = PROJECT_ROOT / "Inputs" / "_monte_carlo_params.csv"
 MODULE = "FTT-GMP"
+PERTURB_START_YEAR = 2026
 
 
 def scenario_name(i, prefix):
@@ -204,6 +205,60 @@ def find_column(df, cost_column):
     return fold.get(cost_column.strip().casefold())
 
 
+
+def _year_columns(frame):
+    """Return a list of the year-value columns in a non-RTI frame."""
+    return [c for c in frame.columns[1:] if str(c).strip().lstrip("-").isdigit()]
+
+
+def sample_target_trajectory(rng, base_values, lower, upper,
+                              perturb_start_idx, years):
+    """Draw a capacity trajectory by scaling the base by a random 2050 target.
+
+    A single random value is drawn at year 2050 within ``[lower, upper]``.
+    The ratio to the base 2050 value gives a scale factor that is applied
+    uniformly to all years from *perturb_start_idx* onward — the trajectory
+    shape is preserved exactly; only the overall level changes.
+
+    Parameters
+    ----------
+    rng : numpy.random.Generator
+    base_values : array, shape (n_years,)
+    lower, upper : float
+        Absolute lower/upper bounds for the 2050 target value.
+    perturb_start_idx : int
+        First index that is perturbed; earlier years stay at base values.
+    years : array of int, shape (n_years,)
+        Calendar year corresponding to each element.
+
+    Returns
+    -------
+    trajectory : ndarray, shape (n_years,)
+    """
+    n_years = len(base_values)
+    trajectory = base_values.copy()
+
+    idx_2050 = int(np.searchsorted(years, 2050))
+    if idx_2050 >= n_years or years[idx_2050] != 2050:
+        return trajectory
+
+    base_2050 = base_values[idx_2050]
+    if base_2050 < 1e-10:
+        return trajectory
+
+    drawn_2050 = rng.uniform(lower, upper)
+    scale_factor = drawn_2050 / base_2050
+
+    trajectory[perturb_start_idx:] = base_values[perturb_start_idx:] * scale_factor
+    trajectory = np.maximum(trajectory, 0.0)
+
+    return trajectory
+
+
+# ---------------------------------------------------------------------------
+# Core MC functions
+# ---------------------------------------------------------------------------
+
 def validate_spec(spec, s0_dir, base_dir):
     """Validate the spec and return a list of parameter dicts."""
     required = ["variable_file", "technology", "cost_column", "mode", "lower", "upper"]
@@ -232,12 +287,58 @@ def validate_spec(spec, s0_dir, base_dir):
                 f"Row {row_index}: lower/upper must be numeric for {variable_file} / {technology} / {cost_column}"
             )
             continue
-        
-        # factor is multiplicative, absolute is additive -- only options for now
-        if mode not in ("factor", "absolute"):
-            errors.append(f"Row {row_index}: mode must be 'factor' or 'absolute', got '{mode}'")
+
+        if mode not in ("factor", "absolute", "yearly_smooth"):
+            errors.append(
+                f"Row {row_index}: mode must be 'factor', 'absolute', or 'yearly_smooth', got '{mode}'"
+            )
             continue
 
+        # --- yearly_smooth: separate path -----------------------------------
+        if mode == "yearly_smooth":
+            if variable_file not in base_frames:
+                try:
+                    resolved_dir = resolve_base_dir(variable_file, base_dir, s0_dir)
+                    base_frames[variable_file] = read_base_frame(variable_file, resolved_dir)
+                except ValueError as exc:
+                    errors.append(f"Row {row_index}: {exc}")
+                    continue
+
+            frame = base_frames[variable_file]
+            label_col = frame.columns[0]
+            row_idx = find_row_index(frame, technology, label_col=label_col)
+            if row_idx is None:
+                errors.append(
+                    f"Row {row_index}: technology '{technology}' not found in {variable_file}"
+                )
+                continue
+
+            year_cols = _year_columns(frame)
+            all_years = np.array([int(c) for c in year_cols])
+            base_trajectory = np.asarray(frame.loc[row_idx, year_cols], dtype=float)
+
+            first_year = int(all_years[0])
+            perturb_start_idx = PERTURB_START_YEAR - first_year
+
+            params.append({
+                "variable_file": variable_file,
+                "technology": technology,
+                "cost_column": "ALL",
+                "mode": "yearly_smooth",
+                "lower": lower,
+                "upper": upper,
+                "base_value": float(base_trajectory.mean()),
+                "row_index": row_idx,
+                "time_series": False,
+                "value_columns": None,
+                "base_trajectory": base_trajectory,
+                "perturb_start_idx": perturb_start_idx,
+                "years": all_years,
+                "year_columns": year_cols,
+            })
+            continue
+
+        # --- factor / absolute: original path --------------------------------
         if variable_file not in base_frames:
             try:
                 resolved_dir = resolve_base_dir(variable_file, base_dir, s0_dir)
@@ -303,20 +404,36 @@ def validate_spec(spec, s0_dir, base_dir):
 
 
 def sample_draws(rng, n, params):
-    """Sample uniform draws for each scenario and return drawn values per parameter."""
-    quantiles = {param_index: np.zeros(n) for param_index in range(len(params))}
+    """Sample uniform draws for each scenario and return drawn values per parameter.
 
-    for draw_index in range(n):
-        for param_index in range(len(params)):
-            quantiles[param_index][draw_index] = rng.random()
-
+    For ``factor``/``absolute`` modes the result is a 1-D array of shape
+    ``(n,)`` per parameter.  For ``yearly_smooth`` the result is a 2-D array
+    of shape ``(n, n_years)`` representing a scaled trajectory per draw.
+    """
     draws = {}
+
     for param_index, param in enumerate(params):
-        q = param["lower"] + quantiles[param_index] * (param["upper"] - param["lower"])
-        if param["mode"] == "factor":
-            draws[param_index] = param["base_value"] * (1 + q)
+        if param["mode"] == "yearly_smooth":
+            trajectories = np.zeros((n, len(param["years"])))
+            for draw_index in range(n):
+                trajectories[draw_index] = sample_target_trajectory(
+                    rng,
+                    param["base_trajectory"],
+                    param["lower"],
+                    param["upper"],
+                    param["perturb_start_idx"],
+                    param["years"],
+                )
+            draws[param_index] = trajectories
         else:
-            draws[param_index] = param["base_value"] + q
+            q = np.empty(n)
+            for draw_index in range(n):
+                q[draw_index] = rng.random()
+            q = param["lower"] + q * (param["upper"] - param["lower"])
+            if param["mode"] == "factor":
+                draws[param_index] = param["base_value"] * (1.0 + q)
+            else:
+                draws[param_index] = param["base_value"] + q
 
     return draws
 
@@ -336,16 +453,22 @@ def write_scenario_folder(scenario, params, draws, draw_index, base_frames,
         frame = base_frames[variable_file].copy()
         for param_index, param in enumerate(params):
             if param["variable_file"] == variable_file:
-                drawn = draws[param_index][draw_index]
-                if param["time_series"]:
-                    if param["mode"] == "factor":
-                        multiplier = drawn / param["base_value"]
-                        frame.loc[param["row_index"], param["value_columns"]] *= multiplier
-                    else:
-                        addend = drawn - param["base_value"]
-                        frame.loc[param["row_index"], param["value_columns"]] += addend
+                drawn_array = draws[param_index]
+                if drawn_array.ndim == 2:
+                    # yearly_smooth: write the full trajectory row
+                    trajectory = drawn_array[draw_index]
+                    frame.loc[param["row_index"], param["year_columns"]] = trajectory
                 else:
-                    frame.loc[param["row_index"], param["cost_column"]] = drawn
+                    drawn = drawn_array[draw_index]
+                    if param["time_series"]:
+                        if param["mode"] == "factor":
+                            multiplier = drawn / param["base_value"]
+                            frame.loc[param["row_index"], param["value_columns"]] *= multiplier
+                        else:
+                            addend = drawn - param["base_value"]
+                            frame.loc[param["row_index"], param["value_columns"]] += addend
+                    else:
+                        frame.loc[param["row_index"], param["cost_column"]] = drawn
         frame.to_csv(scenario_dir / variable_file, index=False)
 
     if base_dir is not None and base_dir.is_dir():
@@ -401,6 +524,11 @@ def cmd_generate(args):
             write_scenario_folder(scenario, params, draws, draw_index, base_frames,
                                  base_dir=base_dir)
             for param_index, param in enumerate(params):
+                drawn_array = draws[param_index]
+                if drawn_array.ndim == 2:
+                    drawn_value = float(drawn_array[draw_index].mean())
+                else:
+                    drawn_value = float(drawn_array[draw_index])
                 draw_records.append({
                     "scenario": scenario,
                     "variable_file": param["variable_file"],
@@ -408,7 +536,7 @@ def cmd_generate(args):
                     "cost_column": param["cost_column"],
                     "mode": param["mode"],
                     "base_value": param["base_value"],
-                    "drawn_value": draws[param_index][draw_index],
+                    "drawn_value": drawn_value,
                 })
             print(f"Generated {scenario}")
 
