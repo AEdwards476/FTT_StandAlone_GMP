@@ -62,6 +62,8 @@ SETTINGS_PATH = PROJECT_ROOT / "settings.ini"
 SCENARIO_LABELS = {
     "S0": "Local scale",
     "nat_scale": "National scale",
+    "gas_shock_loc": "Gas price shock (local scale)",
+    "gas_shock_nat": "Gas price shock (national scale)",
 }
 
 
