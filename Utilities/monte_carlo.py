@@ -321,8 +321,14 @@ def sample_draws(rng, n, params):
     return draws
 
 
-def write_scenario_folder(scenario, params, draws, draw_index, base_frames):
-    """Write the FTT-GMP cost matrix files for one scenario folder."""
+def write_scenario_folder(scenario, params, draws, draw_index, base_frames,
+                         base_dir=None):
+    """Write the FTT-GMP cost matrix files for one scenario folder.
+
+    Perturbed files are written from *base_frames*.  Any CSV in *base_dir*
+    that is **not** in *base_frames* is copied as-is so that base-scenario-
+    specific variables (e.g. a gas-price spike) survive into the MC draws.
+    """
     scenario_dir = PROJECT_ROOT / "Inputs" / scenario / MODULE
     scenario_dir.mkdir(parents=True, exist_ok=True)
 
@@ -341,6 +347,12 @@ def write_scenario_folder(scenario, params, draws, draw_index, base_frames):
                 else:
                     frame.loc[param["row_index"], param["cost_column"]] = drawn
         frame.to_csv(scenario_dir / variable_file, index=False)
+
+    if base_dir is not None and base_dir.is_dir():
+        perturbed = {vf.lower() for vf in base_frames}
+        for csv_file in sorted(base_dir.glob("*.csv")):
+            if csv_file.name.lower() not in perturbed:
+                shutil.copy2(csv_file, scenario_dir / csv_file.name)
 
 
 def update_settings(scenarios, settings_path):
@@ -386,7 +398,8 @@ def cmd_generate(args):
         draw_records = []
         for draw_index in range(n):
             scenario = scenario_name(draw_index + 1, prefix)
-            write_scenario_folder(scenario, params, draws, draw_index, base_frames)
+            write_scenario_folder(scenario, params, draws, draw_index, base_frames,
+                                 base_dir=base_dir)
             for param_index, param in enumerate(params):
                 draw_records.append({
                     "scenario": scenario,
