@@ -1,5 +1,6 @@
 variable_file,technology,cost_column,mode,lower,upper
 gm_NESO_av_electricity_price,2 Average (Baseline Low & High),ALL,factor,-0.2,0.2
+gm_fossil_gas_price,1 UK,ALL,factor,-0.2,0.2
 gm_CO2_intensity_upstream,1 UK,ALL,factor,-0.2,0.2
 gm_costs_combustion,1 Conventional,Capex (GBP/kW),factor,-0.2,0.2
 gm_costs_combustion,2 CCS retrofit,Capex (GBP/kW),factor,-0.2,0.2
@@ -14,11 +15,16 @@ gm_costs_molecules,3 Hydrogen BOP,Capex (GBP/kW),factor,-0.2,0.2
 gm_costs_molecules,4 Hydrogen stack,Capex (GBP/kW),factor,-0.2,0.2
 gm_costs_molecules,2 Synthetic methane,Opex (GBP/kW),factor,-0.2,0.2
 gm_costs_molecules,3 Hydrogen BOP,Opex (GBP/kW),factor,-0.2,0.2
+gm_costs_molecules,2 Synthetic methane,Efficiency (MWh/t),factor,-0.2,0.2
+gm_costs_molecules,3 Hydrogen BOP,Efficiency (MWh/t),factor,-0.2,0.2
 gm_costs_molecules,2 Synthetic methane,Capex learning exp,factor,-0.5,0.5
 gm_costs_molecules,3 Hydrogen BOP,Capex learning exp,factor,-0.5,0.5
 gm_costs_molecules,4 Hydrogen stack,Capex learning exp,factor,-0.5,0.5
 gm_costs_molecules,2 Synthetic methane,Efficiency learning exp,factor,-0.5,0.5
 gm_costs_molecules,3 Hydrogen BOP,Efficiency learning exp,factor,-0.5,0.5
+gm_costs_molecules,3 Hydrogen BOP,Transport (GBP/kg),factor,-0.2,0.2
+gm_costs_molecules,2 Synthetic methane,Storage (GBP/kg),factor,-0.2,0.2
+gm_costs_molecules,3 Hydrogen BOP,Storage (GBP/kg),factor,-0.2,0.2
 gm_costs_removal,1 DAC,Capex (GBP/tCO2/year),factor,-0.2,0.2
 gm_costs_removal,2 DOC,Capex (GBP/tCO2/year),factor,-0.2,0.2
 gm_costs_removal,1 DAC,Opex (GBP/tCO2/year),factor,-0.2,0.2
@@ -34,3 +40,11 @@ gm_costs_removal,1 DAC,Opex learning exp,factor,-0.5,0.5
 gm_costs_removal,2 DOC,Opex learning exp,factor,-0.5,0.5
 gm_costs_removal,1 DAC,Efficiency learning exp,factor,-0.5,0.5
 gm_costs_removal,2 DOC,Efficiency learning exp,factor,-0.5,0.5
+gm_gbl_cap_combustion,2 CCS retrofit,ALL,yearly_smooth,395.9855674,1583.942269
+gm_gbl_cap_combustion,3 H2 ready,ALL,yearly_smooth,35.94752755,143.7901102
+gm_gbl_cap_combustion,4 H2 retrofit,ALL,yearly_smooth,35.94752755,143.7901102
+gm_gbl_cap_molecules,2 Synthetic methane,ALL,yearly_smooth,127.54341,510.17364
+gm_gbl_cap_molecules,3 Hydrogen BOP,ALL,yearly_smooth,106,424
+gm_gbl_cap_molecules,4 Hydrogen stack,ALL,yearly_smooth,106,424
+gm_gbl_cap_removal,1 DAC,ALL,yearly_smooth,600,4200
+gm_gbl_cap_removal,2 DOC,ALL,yearly_smooth,600,4200
