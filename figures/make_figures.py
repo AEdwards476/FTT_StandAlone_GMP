@@ -22,8 +22,8 @@ doc_vs_dac            DOC vs DAC levelised costs over time (same axis)
 lcoh_vs_lcom          LCOH vs LCOM levelised costs over time (same axis)
 pathway_lcoe          Levelised cost of dispatchable electricity (GBP/kWh) by
                       pathway + MC envelope on each pathway
-neso_electricity_price  NESO average electricity price (baseline option,
-                      GBP/MWh) + MC envelope
+neso_electricity_price  NESO electricity price and fossil gas price (£/MWh)
+                      + MC envelopes
 
 Usage
 -----
@@ -172,7 +172,7 @@ def plot_two_costs(results, years, keep, series, unit, title, fname,
     ax.set_title(title)
     ax.margins(x=0)
     ax.grid(True, alpha=0.3)
-    ax.legend(loc="best")
+    ax.legend(loc="upper right")
     if base:
         annotate_base(ax, base_scenario)
     save_or_show(fig, out_dir, fname, dpi, show, fmt, base_scenario)
@@ -239,28 +239,41 @@ def plot_pathway_lcoe(results, years, keep, out_dir, dpi, show, fmt,
 
 def plot_neso_electricity_price(results, years, keep, out_dir, dpi, show, fmt,
                                 base_scenario, prefix):
-    """Draw the NESO average electricity price (baseline option) with MC envelope."""
+    """Draw NESO electricity price and fossil gas price (£/MWh) with MC envelopes."""
     base, mc = split_scenarios(results, base_scenario, prefix)
+
+    series = [
+        ("gm_NESO_av_electricity_price", "Electricity price", "#66CCEE", 1),
+        ("gm_fossil_gas_price", "Gas price", "#CCBB44", None),
+    ]
 
     fig, ax = plt.subplots(figsize=(6, 4))
 
-    if base:
-        ax.plot(years,
-                extract_series(list(base.values())[0],
-                               "gm_NESO_av_electricity_price",
-                               pathway=1, keep=keep),
-                color="#66CCEE", linewidth=2.5)
-    if mc:
-        mc_array = np.stack([
-            extract_series(v, "gm_NESO_av_electricity_price", pathway=1,
-                           keep=keep)
-            for v in mc.values()])
-        low, high, _ = envelope(mc_array)
-        ax.fill_between(years, low, high, color="#66CCEE", alpha=0.20)
+    for var_name, label, color, pathway in series:
+        drawn = False
+        if base:
+            vals = extract_series(list(base.values())[0], var_name,
+                                  pathway=pathway, keep=keep)
+            if var_name == "gm_fossil_gas_price":
+                vals = vals * 1000.0
+            ax.plot(years, vals, color=color, linewidth=2.5, label=label)
+            drawn = True
+        if mc:
+            mc_list = []
+            for v in mc.values():
+                vals = extract_series(v, var_name, pathway=pathway, keep=keep)
+                if var_name == "gm_fossil_gas_price":
+                    vals = vals * 1000.0
+                mc_list.append(vals)
+            mc_array = np.stack(mc_list)
+            low, high, _ = envelope(mc_array)
+            ax.fill_between(years, low, high, color=color, alpha=0.20,
+                            label=label if not drawn else "_nolegend_")
 
-    ax.set_ylabel("Average electricity price (£/MWh)")
+    ax.set_ylabel("Price (£/MWh)")
     ax.margins(x=0)
     ax.grid(True, alpha=0.3)
+    ax.legend(loc="upper right")
     if base:
         annotate_base(ax, base_scenario)
     save_or_show(fig, out_dir, "gm_NESO_av_electricity_price", dpi, show, fmt,
