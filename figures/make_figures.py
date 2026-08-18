@@ -18,10 +18,12 @@ is present, just its line is drawn.
 
 Available figures (key: description)
 ------------------------------------
-doc_vs_dac      DOC vs DAC levelised costs over time (same axis)
-lcoh_vs_lcom    LCOH vs LCOM levelised costs over time (same axis)
-pathway_lcoe    Levelised cost of dispatchable electricity (GBP/kWh) by
-                pathway + MC envelope on each pathway
+doc_vs_dac            DOC vs DAC levelised costs over time (same axis)
+lcoh_vs_lcom          LCOH vs LCOM levelised costs over time (same axis)
+pathway_lcoe          Levelised cost of dispatchable electricity (GBP/kWh) by
+                      pathway + MC envelope on each pathway
+neso_electricity_price  NESO average electricity price (baseline option,
+                      GBP/MWh) + MC envelope
 
 Usage
 -----
@@ -48,6 +50,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 plt.rcParams["font.family"] = "Inter"
+plt.rcParams["font.size"] = 12          # base (was 10)
+plt.rcParams["axes.labelsize"] = 12     # axis labels (was 10)
+plt.rcParams["axes.titlesize"] = 13     # suptitle (was 12)
+plt.rcParams["xtick.labelsize"] = 12    # tick labels (was ~10)
+plt.rcParams["ytick.labelsize"] = 12    # tick labels (was ~10)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_RESULTS = PROJECT_ROOT / "Output" / "Results.pickle"
@@ -62,8 +69,8 @@ SETTINGS_PATH = PROJECT_ROOT / "settings.ini"
 SCENARIO_LABELS = {
     "S0": "Local scale",
     "nat_scale": "National scale",
-    "gas_shock_loc": "Gas price shock (local scale)",
-    "gas_shock_nat": "Gas price shock (national scale)",
+    "gas_shock_loc": "Gas price shock\n(local scale)",
+    "gas_shock_nat": "Gas price shock\n(national scale)",
 }
 
 
@@ -138,7 +145,7 @@ def annotate_base(ax, base_scenario):
     """Write a friendly base-scenario label in the top-left corner."""
     ax.text(0.04, 0.96, base_scenario_label(base_scenario),
             transform=ax.transAxes, ha="left", va="top",
-            fontsize=11, color="dimgray")
+            fontsize=13, color="dimgray")
 
 
 def plot_two_costs(results, years, keep, series, unit, title, fname,
@@ -230,6 +237,36 @@ def plot_pathway_lcoe(results, years, keep, out_dir, dpi, show, fmt,
                  base_scenario)
 
 
+def plot_neso_electricity_price(results, years, keep, out_dir, dpi, show, fmt,
+                                base_scenario, prefix):
+    """Draw the NESO average electricity price (baseline option) with MC envelope."""
+    base, mc = split_scenarios(results, base_scenario, prefix)
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+
+    if base:
+        ax.plot(years,
+                extract_series(list(base.values())[0],
+                               "gm_NESO_av_electricity_price",
+                               pathway=1, keep=keep),
+                color="#66CCEE", linewidth=2.5)
+    if mc:
+        mc_array = np.stack([
+            extract_series(v, "gm_NESO_av_electricity_price", pathway=1,
+                           keep=keep)
+            for v in mc.values()])
+        low, high, _ = envelope(mc_array)
+        ax.fill_between(years, low, high, color="#66CCEE", alpha=0.20)
+
+    ax.set_ylabel("Average electricity price (£/MWh)")
+    ax.margins(x=0)
+    ax.grid(True, alpha=0.3)
+    if base:
+        annotate_base(ax, base_scenario)
+    save_or_show(fig, out_dir, "gm_NESO_av_electricity_price", dpi, show, fmt,
+                 base_scenario)
+
+
 def save_or_show(fig, out_dir, fname, dpi, show, fmt, base_scenario):
     """Save the figure to out_dir and optionally open the interactive window.
 
@@ -255,6 +292,7 @@ FIGURES = {
     "doc_vs_dac": plot_doc_vs_dac,
     "lcoh_vs_lcom": plot_lcoh_vs_lcom,
     "pathway_lcoe": plot_pathway_lcoe,
+    "neso_electricity_price": plot_neso_electricity_price,
 }
 
 
