@@ -213,12 +213,14 @@ def _year_columns(frame):
 
 def sample_target_trajectory(rng, base_values, lower, upper,
                               perturb_start_idx, years):
-    """Draw a capacity trajectory by scaling the base by a random 2050 target.
+    """Draw a trajectory by scaling the base toward a random 2050 target.
 
     A single random value is drawn at year 2050 within ``[lower, upper]``.
-    The ratio to the base 2050 value gives a scale factor that is applied
-    uniformly to all years from *perturb_start_idx* onward — the trajectory
-    shape is preserved exactly; only the overall level changes.
+    The ratio to the base 2050 value gives a scale factor that is linearly
+    interpolated from 1.0 (no perturbation) at *perturb_start_idx* to the
+    full drawn factor at 2050.  This produces an envelope that fans out
+    gradually from zero uncertainty at the start year to full uncertainty
+    at 2050.
 
     Parameters
     ----------
@@ -249,7 +251,12 @@ def sample_target_trajectory(rng, base_values, lower, upper,
     drawn_2050 = rng.uniform(lower, upper)
     scale_factor = drawn_2050 / base_2050
 
-    trajectory[perturb_start_idx:] = base_values[perturb_start_idx:] * scale_factor
+    span = max(idx_2050 - perturb_start_idx, 1)
+    for i in range(perturb_start_idx, n_years):
+        progress = (i - perturb_start_idx) / span
+        local_scale = 1.0 + progress * (scale_factor - 1.0)
+        trajectory[i] = base_values[i] * local_scale
+
     trajectory = np.maximum(trajectory, 0.0)
 
     return trajectory
@@ -305,7 +312,10 @@ def validate_spec(spec, s0_dir, base_dir):
                     continue
 
             frame = base_frames[variable_file]
-            label_col = frame.columns[0]
+            if is_time_series_frame(frame):
+                label_col, _ = time_series_columns(frame)
+            else:
+                label_col = frame.columns[0]
             row_idx = find_row_index(frame, technology, label_col=label_col)
             if row_idx is None:
                 errors.append(

@@ -1,6 +1,5 @@
 variable_file,technology,cost_column,mode,lower,upper
-gm_NESO_av_electricity_price,2 Average (Baseline Low & High),ALL,factor,-0.2,0.2
-gm_fossil_gas_price,1 UK,ALL,factor,-0.2,0.2
+gm_fossil_gas_price,1 UK,ALL,yearly_smooth,0.02952,0.04428
 gm_CO2_intensity_upstream,1 UK,ALL,factor,-0.2,0.2
 gm_costs_combustion,1 Conventional,Capex (GBP/kW),factor,-0.2,0.2
 gm_costs_combustion,2 CCS retrofit,Capex (GBP/kW),factor,-0.2,0.2
@@ -48,3 +47,4 @@ gm_gbl_cap_molecules,3 Hydrogen BOP,ALL,yearly_smooth,106,424
 gm_gbl_cap_molecules,4 Hydrogen stack,ALL,yearly_smooth,106,424
 gm_gbl_cap_removal,1 DAC,ALL,yearly_smooth,600,4200
 gm_gbl_cap_removal,2 DOC,ALL,yearly_smooth,600,4200
+gm_NESO_av_electricity_price,2 Average (Baseline Low & High),ALL,yearly_smooth,60.04720105,90.07080157
